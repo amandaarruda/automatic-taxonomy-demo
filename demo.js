@@ -21,8 +21,8 @@ I.add({ pt: {
   '8 = paper': '8 = artigo', 'FRAME SAMPLING': 'AMOSTRAGEM', '16 frames · uniform': '16 frames · uniformes', '1 frame per second': '1 frame por segundo',
   'Vision-language model': 'Modelo de visão e linguagem', 'InternVL3.5 · local GPU': 'InternVL3.5 · GPU local', 'SIMULATED · CACHED': 'SIMULADO · EM CACHE', 'RESPONSE': 'RESPOSTA',
   'Explore the atlas': 'Explorar o atlas', 'Choose other videos': 'Escolher outros vídeos', 'LIVE · PYTHON IN YOUR BROWSER': 'AO VIVO · PYTHON NO SEU NAVEGADOR',
-  'All': 'Todos', 'Everyday scenes': 'Cenas cotidianas', 'Incidents': 'Incidentes', 'Every third video': 'Um a cada três', 'Two per scene': 'Dois por cena', 'Clear': 'Limpar',
-  'Run discovery on {n} videos': 'Rodar a descoberta em {n} vídeos', 'Select at least one video': 'Selecione ao menos um vídeo', 'cached': 'em cache',
+  'All': 'Todos', 'Routine operations': 'Operações de rotina', 'Incidents': 'Incidentes', 'Every third video': 'Um a cada três', 'Two per scene': 'Dois por cena', 'Clear': 'Limpar',
+  'Run discovery on {n} videos': 'Rodar a descoberta em {n} vídeos', 'Select at least one video': 'Selecione ao menos um vídeo', 'Previous step (←)': 'Passo anterior (←)', 'Pause (space)': 'Pausar (espaço)', 'Play (space)': 'Continuar (espaço)', 'Next step (→)': 'Próximo passo (→)', 'Show or hide the log': 'Mostrar ou ocultar o registro', '{n} of {t} selected': '{n} de {t} selecionados', 'cached': 'em cache',
   'Downloading the Python runtime (Pyodide)…': 'Baixando o Python do navegador (Pyodide)…', 'Loading numpy, scipy and scikit-learn…': 'Carregando numpy, scipy e scikit-learn…',
   'Loading the product code…': 'Carregando o código do produto…', 'Python ready · Pyodide {v}': 'Python pronto · Pyodide {v}',
   'Live runs need the page served over http(s); cached selections still work.': 'A execução ao vivo exige a página servida por http(s); as seleções em cache funcionam.',
@@ -66,13 +66,15 @@ en: { 'intro-fine': 'Only the vision-language model is simulated: the videos are
   'cap-families': 'Each cluster is reduced to its normalised centroid. Agglomerative clustering (cosine, average and complete linkage) is cut with the paper\'s composite score — silhouette, bootstrap stability, linkage agreement and cohesion.{s}',
   'cap-name': 'Each name is made of the most distinctive terms of the group\'s own statements; nothing is invented. Colour shows how many supporting videos the model flagged as anomalous. Everything still links back to statements and source videos.' } });
 
-const SCENE_NAMES = { traffic: ['Traffic', 'Trânsito'], parking: ['Parking', 'Estacionamento'], sidewalk: ['Sidewalk', 'Calçada'], crossing: ['Crosswalk', 'Faixa de pedestres'],
-  store: ['Store aisle', 'Corredor de loja'], counter: ['Checkout', 'Caixa'], office: ['Office', 'Escritório'], fuel: ['Gas station', 'Posto de combustível'], fire: ['Fire & smoke', 'Fogo e fumaça'],
-  fall: ['Falls', 'Quedas'], struggle: ['Pushing', 'Empurrões'], crowd: ['Crowd running', 'Multidão correndo'], gathering: ['Gathering', 'Grupo reunido'], restaurant: ['Restaurant', 'Restaurante'],
-  platform: ['Train platform', 'Plataforma de trem'], warehouse: ['Warehouse', 'Depósito'], weather: ['Rain', 'Chuva'], night: ['Night street', 'Rua à noite'], collision: ['Collision', 'Colisão'],
-  object: ['Unattended object', 'Objeto abandonado'], damage: ['Property damage', 'Dano ao patrimônio'] };
+const SCENE_NAMES = { lobby: ['Branch lobby', 'Saguão da agência'], teller: ['Teller window', 'Guichê de caixa'], queue: ['Teller queue', 'Fila do caixa'],
+  advisor: ['Advisor desk', 'Mesa do gerente'], atm: ['ATM use', 'Uso de ATM'], atmqueue: ['ATM queue', 'Fila do ATM'], vault: ['Vault', 'Cofre'],
+  office: ['Back office', 'Escritório'], meeting: ['Meeting room', 'Sala de reunião'], reception: ['HQ reception', 'Recepção da sede'],
+  plaza: ['Outdoor plaza', 'Área externa'], parking: ['Parking lot', 'Estacionamento'], armored: ['Armored truck', 'Carro-forte'],
+  night: ['Night exterior', 'Exterior à noite'], fire: ['Fire & smoke', 'Fogo e fumaça'], fall: ['Falls', 'Quedas'], altercation: ['Pushing', 'Empurrões'],
+  crowd: ['Crowd running', 'Multidão correndo'], unattended: ['Unattended bag', 'Bolsa abandonada'], atmdamage: ['ATM tampering', 'Dano ao ATM'],
+  collision: ['Collision', 'Colisão'] };
 const sceneName = s => (SCENE_NAMES[s] || [s, s])[I.lang === 'pt' ? 1 : 0];
-const PRESET_NAMES = { all: 'All', everyday: 'Everyday scenes', incidents: 'Incidents', third: 'Every third video', small: 'Two per scene' };
+const PRESET_NAMES = { all: 'All', everyday: 'Routine operations', incidents: 'Incidents', third: 'Every third video', small: 'Two per scene' };
 
 /* ------------------------------------------------------------------ corpus, selection, cache */
 let CORPUS = null, PRESETS = {}, selected = new Set(), RESULT = window.ATLAS, resultSource = 'precomputed';
@@ -168,7 +170,7 @@ function layoutWheel() {
 }
 const nodeXY = n => { const a = scr([n.x, n.y]), w = WHEEL.pos[n.k] || a; return [lerp(a[0], w[0], ease(wheel)), lerp(a[1], w[1], ease(wheel))]; };
 function draw(dt) {
-  ctx.clearRect(0, 0, W, H); const k = 1 - Math.exp(-dt * (reduced ? 60 : 3.2)), lt = LIGHT();
+  ctx.clearRect(0, 0, W, H); const k = 1 - Math.exp(-dt * (reduced ? 60 : 2.2)), lt = LIGHT();
   ctx.globalCompositeOperation = lt ? 'source-over' : 'lighter';
   for (const p of pts) {
     if (p.delay > 0) { p.delay -= dt; continue; }
@@ -233,7 +235,7 @@ function buildSelection() {
     const sec = document.createElement('div'); sec.className = 'scene'; sec.dataset.s = scene;
     sec.innerHTML = `<div class="sh"><button data-scene="${scene}"><i class="box"></i><span class="sn">${esc(sceneName(scene))}</span>${CORPUS.scenes[scene] ? '<i class="flagdot" title="anomalous scene"></i>' : ''}</button><span class="n"></span></div><div class="tiles"></div>`;
     const tiles = sec.querySelector('.tiles');
-    vids.forEach((v, n) => { const b = document.createElement('button'); b.className = 'vt'; b.dataset.v = v.v; b.title = v.v; b.innerHTML = `<canvas width="64" height="40" data-s="${scene}" data-n="${n}"></canvas>`; tiles.appendChild(b); io.observe(b.firstChild); });
+    vids.forEach((v, n) => { const b = document.createElement('button'); b.className = 'vt'; b.dataset.v = v.v; b.title = v.v; b.setAttribute('aria-label', v.v); b.innerHTML = `<canvas width="64" height="40" data-s="${scene}" data-n="${n}"></canvas>`; tiles.appendChild(b); io.observe(b.firstChild); });
     grid.appendChild(sec);
   });
   grid.addEventListener('click', e => {
@@ -249,8 +251,8 @@ function renderPresets() {
 }
 let currentKey = '';
 function syncSelection() {
-  $$('.vt').forEach(t => t.classList.toggle('on', selected.has(t.dataset.v)));
-  $$('.scene').forEach(sec => { const vids = [...sec.querySelectorAll('.vt')], n = vids.filter(t => t.classList.contains('on')).length; sec.classList.toggle('full', n === vids.length); sec.classList.toggle('some', n > 0 && n < vids.length); sec.querySelector('.n').textContent = `${n}/${vids.length}`; sec.querySelector('.sn').textContent = sceneName(sec.dataset.s); });
+  $$('.vt').forEach(t => { const on = selected.has(t.dataset.v); t.classList.toggle('on', on); t.setAttribute('aria-pressed', on); });
+  $$('.scene').forEach(sec => { const vids = [...sec.querySelectorAll('.vt')], n = vids.filter(t => t.classList.contains('on')).length; sec.classList.toggle('full', n === vids.length); sec.classList.toggle('some', n > 0 && n < vids.length); sec.querySelector('.n').textContent = `${n}/${vids.length}`; sec.querySelector('.sh button').setAttribute('aria-pressed', n === vids.length); sec.querySelector('.sn').textContent = sceneName(sec.dataset.s); });
   const key = keyOf(selected, mcs()), hit = cached(key);
   $$('.preset').forEach(b => { const p = CORPUS.presets.find(x => x.id === b.dataset.p); b.classList.toggle('on', !!p && p.videos.length === selected.size && p.videos.every(v => selected.has(v))); });
   const btn = $('#runBtn'); btn.disabled = !selected.size;
@@ -259,7 +261,7 @@ function syncSelection() {
 function run() {
   if (!selected.size) return;
   currentKey = keyOf(selected, mcs()); const hit = cached(currentKey);
-  rlLines.innerHTML = ''; $('#runlog').hidden = false; runId++;
+  rlLines.innerHTML = ''; $('#runlog').hidden = false; $('#runlog').classList.toggle('min', W < 860); $('#rlToggle').setAttribute('aria-expanded', W >= 860); runId++;
   if (hit) { setResult(hit[1], hit[0]); state('ok', L('from cache')); logLine(`✓ <b>${esc(L(hit[0] === 'preset' ? 'Precomputed selection (same code, run at build time) — reused.' : 'Same selection already computed in this browser — reused.'))}</b>`); logEvent({ step: 'done', t: 0, ...hit[1].meta.counts }); }
   else { RESULT = null; state('', L('running…')); startWorker(); const names = CORPUS.videos.map(v => v.v).filter(v => selected.has(v)); worker && worker.postMessage({ id: runId, request: { videos: names, min_cluster_size: mcs() } }); }
   goTo(1);
@@ -268,7 +270,7 @@ function run() {
 /* ------------------------------------------------------------------ steps 2–3 · sampling and simulated responses */
 const chosenVideos = () => CORPUS.videos.filter(v => selected.has(v.v));
 let frames = [];
-const sampling = { mode: 'uniform16', duration: 40, t: 0, playing: false, captured: new Set(), scene: 'traffic' };
+const sampling = { mode: 'uniform16', duration: 40, t: 0, playing: false, captured: new Set(), scene: 'lobby' };
 function sampleTimes() { const d = sampling.duration; return sampling.mode === 'uniform16' ? Array.from({ length: 16 }, (_, i) => i * (d - .1) / 15) : Array.from({ length: Math.ceil(d) }, (_, i) => i); }
 function buildTrack() {
   const track = $('#track'), times = sampleTimes(), d = sampling.duration; track.innerHTML = '';
@@ -284,7 +286,7 @@ $$('#modeSeg button').forEach(b => b.addEventListener('click', () => setMode(b.d
 const player = $('#player'), pg = player.getContext('2d');
 function stepPlayer(dt) {
   if (!layers.sampling.classList.contains('on')) return;
-  const d = sampling.duration; if (sampling.playing) sampling.t = Math.min(d, sampling.t + dt * d / (reduced ? .2 : 4.2));
+  const d = sampling.duration; if (sampling.playing) sampling.t = Math.min(d, sampling.t + dt * d / (reduced ? .2 : 7));
   SC.drawScene(pg, sampling.scene, sampling.t, player.width, player.height, 11);
   $('#playhead').style.left = (sampling.t / d * 100) + '%'; const s = Math.floor(sampling.t); $('#osdTime').textContent = `00:${String(s).padStart(2, '0')}.${Math.floor((sampling.t % 1) * 10)}`;
   sampleTimes().forEach((t, i) => { if (t <= sampling.t && !sampling.captured.has(i)) { sampling.captured.add(i); const th = $(`#strip .thumb[data-i="${i}"]`), tick = $(`#track i[data-i="${i}"]`); if (tick) tick.classList.add('hit');
@@ -322,36 +324,36 @@ const linkName = m => L(m);
 const ACTS = [
   { step: 'Select', ref: 'INPUT · LOCAL VIDEOS', title: 'Choose the videos', manual: true,
     enter() { showLayer('library'); hidePoints(); counter.classList.remove('on'); $('#caption').classList.remove('on'); if (!CORPUS) return; buildSelection(); renderPresets(); syncSelection(); startWorker(); } },
-  { step: 'Sample', ref: 'VISUAL INPUT', title: 'Sample the frames', body: 'cap-sample', dur: 10,
-    enter() { showLayer('sampling'); hidePoints(); counter.classList.remove('on'); const v = chosenVideos()[0]; sampling.scene = v ? v.s : 'traffic'; $('#fileName').textContent = v ? v.v : ''; $('#osdCam').textContent = 'CAM 03 · SYNTHETIC'; setMode('uniform16'); later(5600, () => setMode('1fps')); } },
-  { step: 'Describe', ref: 'EVIDENCE GENERATION · SIMULATED', title: 'The model describes what it sees', body: 'cap-vlm', dur: 12,
+  { step: 'Sample', ref: 'VISUAL INPUT', title: 'Sample the frames', body: 'cap-sample', dur: 17,
+    enter() { showLayer('sampling'); hidePoints(); counter.classList.remove('on'); const v = chosenVideos()[0]; sampling.scene = v ? v.s : 'lobby'; $('#fileName').textContent = v ? v.v : ''; $('#osdCam').textContent = 'CAM 03 · SYNTHETIC'; setMode('uniform16'); later(9500, () => setMode('1fps')); } },
+  { step: 'Describe', ref: 'EVIDENCE GENERATION · SIMULATED', title: 'The model describes what it sees', body: 'cap-vlm', dur: 22,
     enter() { showLayer('vlm'); counter.classList.remove('on'); const vids = chosenVideos(); const mini = $('#miniStrip'); mini.innerHTML = ''; mini.classList.remove('flow');
       for (let j = 0; j < 16; j++) { const th = document.createElement('div'); th.className = 'thumb'; const c = document.createElement('canvas'); c.width = 96; c.height = 54; const g = c.getContext('2d'); if (frames[j]) g.drawImage(frames[j], 0, 0); else SC.drawScene(g, sampling.scene, j * 2.6, 96, 54, 11); th.appendChild(c); th.style.animationDelay = (j * 45) + 'ms'; mini.appendChild(th); }
       later(500, () => { mini.classList.add('flow'); $('.engine').classList.add('busy'); });
       if (vids[0]) later(1900, () => showResponse(vids[0]));
-      vids.slice(1, 6).forEach((v, j) => later(6600 + j * 1050, () => showResponse(v, true)));
+      vids.slice(1, 6).forEach((v, j) => later(9500 + j * 1700, () => showResponse(v, true)));
       const occ = vids.reduce((s, v) => s + JSON.parse(v.r).evidence.length, 0);
-      later(6600, () => count(occ, L('evidence statements'), L('from {n} validated responses', { n: fmt(vids.length) }), 3.5)); },
+      later(9500, () => count(occ, L('evidence statements'), L('from {n} validated responses', { n: fmt(vids.length) }), 3.5)); },
     exit() { $('.engine').classList.remove('busy'); } },
-  { step: 'Embed', ref: 'SEMANTIC DISCOVERY · LIVE', title: 'Every statement becomes a vector', body: 'cap-embed', dur: 8, needs: true,
+  { step: 'Embed', ref: 'SEMANTIC DISCOVERY · LIVE', title: 'Every statement becomes a vector', body: 'cap-embed', dur: 14, needs: true,
     enter() { showLayer(null); if (!RESULT) return waiting(); wait.classList.remove('on'); flyChips();
       pts.forEach((p, i) => { p.tx = P[i][0]; p.ty = P[i][1]; p.tcol = LIGHT() ? '#6f6a5e' : '#d8d1c0'; p.ta = .8; p.tr = 3.2; if (p.a < .05) { p.x = .5 + (Math.random() - .5) * .1; p.y = 1.25; p.delay = reduced ? 0 : Math.random() * 1.6; } });
       count(C.statements, L('unique statements'), L('{n} occurrences · 384-d BGE vectors', { n: fmt(C.occurrences) }), 2); labelFn = null; } },
-  { step: 'Cluster', ref: 'HDBSCAN · LIVE', title: 'Dense regions become clusters', body: 'cap-cluster', dur: 9, needs: true,
+  { step: 'Cluster', ref: 'HDBSCAN · LIVE', title: 'Dense regions become clusters', body: 'cap-cluster', dur: 16, needs: true,
     enter() { showLayer(null); if (!RESULT) return waiting(); wait.classList.remove('on');
       pts.forEach((p, i) => { const k = keyAt(i); p.delay = reduced ? 0 : Math.hypot(P[i][0] - .5, P[i][1] - .5) * 1.4; p.tcol = k ? CL[k].color : (LIGHT() ? '#9a958a' : '#7d8088'); p.ta = k ? .9 : .25; p.tr = k ? 3.8 : 2.4; });
       count(C.clusters, L('clusters'), L('{n} statements left as noise', { n: fmt(C.noise_statements) }), 1.6); setCaption(this);
       labelFn = () => placeApart(clusterKeys.slice(0, W < 860 ? 8 : 16).map(k => { const [x, y] = scr(CC[k]); return { id: 'c' + k, html: esc(CL[k].name), text: CL[k].name, x, y: y - 18, c: CL[k].color }; }), W < 860 ? 5 : 11); } },
-  { step: 'Group', ref: 'CENTROID HIERARCHY · LIVE', title: 'Clusters group into families', body: 'cap-families', dur: 10, needs: true,
+  { step: 'Group', ref: 'CENTROID HIERARCHY · LIVE', title: 'Clusters group into families', body: 'cap-families', dur: 18, needs: true,
     enter() { showLayer(null); if (!RESULT) return waiting(); wait.classList.remove('on'); pts.forEach(p => { p.ta = keyAt(p.i) ? .16 : .05; p.tr = 2; p.delay = 0; }); setCaption(this);
       nodes.forEach(n => { n.x = n.tx = CC[n.k][0]; n.y = n.ty = CC[n.k][1]; n.ta = 1; n.tr = 3 + Math.sqrt(members[n.k].length) * 1.3; n.tcol = CL[n.k].color; });
-      later(1400, () => { tethersTarget = 1; coresTarget = 1; nodes.forEach(n => { const f = famOf(CL[n.k].fam); n.tcol = f ? f.color : '#8a8f98'; }); pts.forEach(p => { const k = keyAt(p.i); if (k) p.tcol = famOf(CL[k].fam).color; });
+      later(2600, () => { tethersTarget = 1; coresTarget = 1; nodes.forEach(n => { const f = famOf(CL[n.k].fam); n.tcol = f ? f.color : '#8a8f98'; }); pts.forEach(p => { const k = keyAt(p.i); if (k) p.tcol = famOf(CL[k].fam).color; });
         count(C.families, L('candidate families'), hs ? L('{m} linkage · k = {k} · {n} cuts scored', { m: linkName(hs.method), k: hs.k, n: RESULT.meta.hierarchy.candidates_evaluated }) : L('second stage not estimated'), 1.2); });
       labelFn = () => tethersTarget ? FAM.filter(f => !f.unassigned).map(f => { const [x, y] = scr(FC[f.id]); return { id: 'f' + f.id, html: `<b>${esc(f.code)}</b>${esc(f.name)}`, x, y, c: f.color }; }) : []; } },
   { step: 'Name', ref: 'AUTOMATIC NAMES · NO REVIEW', title: 'A taxonomy, assembled automatically', body: 'cap-name', dur: 14, last: true, needs: true,
     enter() { showLayer('taxonomy'); if (!RESULT) return waiting(); wait.classList.remove('on'); pts.forEach(p => { p.ta = 0; }); counter.classList.remove('on');
       nodes.forEach(n => { n.ta = 1; n.tr = Math.max(4, Math.min(WHEEL.step * .36, 2 * Math.PI * WHEEL.r0 / WHEEL.NF * .3)); }); tethersTarget = 0; coresTarget = 0; wheelTarget = 1;
-      renderCTA(); later(1800, () => $('#cta').classList.add('in'));
+      renderCTA(); later(2800, () => $('#cta').classList.add('in'));
       labelFn = () => FAM.map(f => { const l = WHEEL.lab[f.id]; if (!l) return null; const deg = l.a * 180 / Math.PI, flip = Math.cos(l.a) < 0, html = `<b>${esc(f.code)}</b>${esc(f.unassigned ? L(f.name) : f.name)}`;
         return { id: 'w' + f.id, html: flip ? `<span style="display:inline-block;transform:translateX(-100%)">${html}</span>` : html, x: l.x, y: l.y, c: f.color, cls: 'wheel', rot: flip ? deg + 180 : deg }; }).filter(Boolean); },
     exit() { $('#cta').classList.remove('in'); wheelTarget = 0; } },
@@ -386,7 +388,8 @@ $('#play').addEventListener('click', () => goTo(0));
 $('#replay').addEventListener('click', () => goTo(0));
 $('#prev').addEventListener('click', () => goTo(Math.max(0, cur - 1)));
 $('#next').addEventListener('click', () => goTo(Math.min(ACTS.length - 1, cur + 1)));
-$('#pause').addEventListener('click', e => { paused = !paused; e.currentTarget.textContent = paused ? '▶' : '❚❚'; });
+$('#pause').addEventListener('click', e => { paused = !paused; const b = e.currentTarget; b.textContent = paused ? '▶' : '❚❚'; b.dataset.i18nTitle = paused ? 'Play (space)' : 'Pause (space)'; b.title = L(b.dataset.i18nTitle); b.setAttribute('aria-label', b.title); });
+$('#rlToggle').addEventListener('click', () => { const m = $('#runlog').classList.toggle('min'); $('#rlToggle').setAttribute('aria-expanded', !m); });
 addEventListener('keydown', e => { if (e.target.matches('input')) return; if (cur < 0) { if (e.key === 'Enter') goTo(0); return; } if (ACTS[cur].manual) return;
   if (e.key === 'ArrowRight') goTo(Math.min(ACTS.length - 1, cur + 1)); else if (e.key === 'ArrowLeft') goTo(Math.max(0, cur - 1)); else if (e.key === ' ') { e.preventDefault(); $('#pause').click(); } });
 addEventListener('resize', resize);

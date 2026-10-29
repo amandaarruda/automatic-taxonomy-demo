@@ -1,5 +1,5 @@
 /* Procedural "camera" scenes for the simulated walkthrough.
-   Abstract shapes only: these are illustrations, not footage, and they match the scene types of demo/synthetic_corpus.py.
+   Abstract shapes only: these are illustrations, not footage, and they match the financial-sector scene types of demo/synthetic_corpus.py.
    drawScene(ctx, scene, t, w, h, seed) draws the scene at time t (seconds). */
 (() => {
 'use strict';
@@ -77,6 +77,32 @@ const SCENES = {
     const k = (t % 6) / 6; for (let i = 0; i < 6; i++) { ctx.strokeStyle = 'rgba(228,216,184,.6)'; ctx.beginPath(); ctx.moveTo(w * .62, h * .3); ctx.lineTo(w * .62 + Math.cos(i) * w * .08 * k, h * .3 + Math.sin(i) * h * .12 * k); ctx.stroke(); }
     person(ctx, w * .55, h * .66, h * .026, -Math.PI / 2.4); },
 };
+
+/* Cenas do corpus financeiro. Várias reaproveitam desenhos acima (fila, calçada, empurrão, objeto, dano). */
+const atmBox = (ctx, x, y, w, h, glow = .5) => { ctx.fillStyle = '#3d4552'; ctx.fillRect(x, y, w, h); ctx.fillStyle = `rgba(150,200,240,${glow})`; ctx.fillRect(x + w * .15, y + h * .12, w * .7, h * .3); ctx.fillStyle = '#1e2229'; ctx.fillRect(x + w * .2, y + h * .55, w * .6, h * .1); };
+Object.assign(SCENES, {
+  lobby(ctx, t, w, h, s) { W(ctx, w, h); ctx.fillStyle = 'rgba(160,200,240,.18)'; ctx.fillRect(w * .35, 0, w * .3, h * .16); ctx.strokeStyle = 'rgba(228,216,184,.25)'; ctx.strokeRect(w * .35, 0, w * .3, h * .16); ctx.beginPath(); ctx.moveTo(w * .5, 0); ctx.lineTo(w * .5, h * .16); ctx.stroke();
+    for (let i = 0; i < 6; i++) { ctx.fillStyle = '#323843'; ctx.fillRect(w * (.12 + i * .13), h * .62, w * .08, h * .05); if (i % 2 === 0) person(ctx, w * (.16 + i * .13), h * .58, h * .02, -Math.PI / 2); }
+    const k = (t % 9) / 9; person(ctx, w * (.5 + Math.sin(t * .6) * .02), h * (.2 + k * .35), h * .022, Math.PI / 2); ctx.fillStyle = '#3a414c'; ctx.fillRect(w * .78, h * .3, w * .12, h * .08); },
+  teller(ctx, t, w, h, s) { W(ctx, w, h); ctx.fillStyle = '#3a414c'; ctx.fillRect(w * .1, h * .42, w * .8, h * .08); for (let i = 0; i < 3; i++) { ctx.fillStyle = 'rgba(160,200,240,.2)'; ctx.fillRect(w * (.14 + i * .27), h * .24, w * .2, h * .18); person(ctx, w * (.24 + i * .27), h * .3, h * .022, Math.PI / 2); }
+    for (let i = 0; i < 2; i++) { const x = w * (.24 + i * .27); person(ctx, x + Math.sin(t * .8 + i) * 3, h * .62, h * .022, -Math.PI / 2); } ctx.fillStyle = C.accent; ctx.fillRect(w * .5, h * .44 + Math.sin(t * 2) * 2, 8, 5); },
+  advisor(ctx, t, w, h, s) { W(ctx, w, h); ctx.fillStyle = '#3a414c'; ctx.fillRect(w * .3, h * .45, w * .4, h * .12); ctx.fillStyle = '#d9d3c4'; ctx.fillRect(w * .46 + Math.sin(t) * 3, h * .47, w * .07, h * .06); person(ctx, w * .36, h * .32, h * .026, Math.PI / 2); person(ctx, w * .64, h * .68, h * .026, -Math.PI / 2);
+    ctx.strokeStyle = 'rgba(160,200,240,.25)'; ctx.strokeRect(w * .12, h * .12, w * .76, h * .76); },
+  atm(ctx, t, w, h, s) { W(ctx, w, h, C.ground); ctx.fillStyle = C.wall; ctx.fillRect(w * .1, 0, w * .8, h * .75); atmBox(ctx, w * .42, h * .25, w * .16, h * .4, .35 + .2 * Math.sin(t * 3)); person(ctx, w * .5, h * .78, h * .028, -Math.PI / 2); ctx.fillStyle = C.accent; ctx.fillRect(w * .5 - 6, h * (.58 + (t % 5 > 3 ? .02 : 0)), 12, 4); },
+  atmqueue(ctx, t, w, h, s) { W(ctx, w, h, C.ground); ctx.fillStyle = C.wall; ctx.fillRect(w * .05, 0, w * .9, h * .5); atmBox(ctx, w * .12, h * .12, w * .12, h * .3, .4); const step = Math.max(0, Math.sin(t * .5) * 3);
+    for (let i = 0; i < 5; i++) person(ctx, w * (.2 + i * .1) + step * (i ? 1 : 0), h * .62, h * .024, Math.PI); },
+  vault(ctx, t, w, h, s) { W(ctx, w, h, '#161a20'); const k = Math.min(1, (t % 12) / 4), cx = w * .5, cy = h * .5, r = h * .3; ctx.fillStyle = '#4b5361'; ctx.beginPath(); ctx.arc(cx, cy, r, 0, TAU); ctx.fill(); ctx.strokeStyle = '#8d97a6'; ctx.lineWidth = 3; ctx.stroke();
+    ctx.save(); ctx.translate(cx, cy); ctx.rotate(k * 2.4); ctx.strokeStyle = C.accent; ctx.lineWidth = 3; for (let i = 0; i < 3; i++) { ctx.rotate(TAU / 3); ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(r * .6, 0); ctx.stroke(); } ctx.restore();
+    ctx.fillStyle = `rgba(12,13,16,${.9 * k})`; ctx.beginPath(); ctx.ellipse(cx + r * .9 * k, cy, r * (1 - .6 * k), r, 0, 0, TAU); ctx.fill(); person(ctx, w * .18, h * .75, h * .024, 0); person(ctx, w * .24, h * .75, h * .024, 0); },
+  meeting(ctx, t, w, h, s) { W(ctx, w, h); ctx.fillStyle = 'rgba(150,200,240,.3)'; ctx.fillRect(w * .3, h * .06, w * .4, h * .14); ctx.fillStyle = '#3a414c'; ctx.beginPath(); ctx.ellipse(w * .5, h * .55, w * .26, h * .15, 0, 0, TAU); ctx.fill();
+    for (let i = 0; i < 7; i++) { const a = i / 7 * TAU; person(ctx, w * .5 + Math.cos(a) * w * .31, h * .55 + Math.sin(a) * h * .22, h * .021 + (i === 0 ? Math.sin(t * 2) * .6 : 0), a + Math.PI); } },
+  reception(ctx, t, w, h, s) { W(ctx, w, h); ctx.fillStyle = '#3a414c'; ctx.fillRect(w * .25, h * .35, w * .5, h * .09); person(ctx, w * .5, h * .24, h * .026, Math.PI / 2); const k = Math.min(1, (t % 10) / 3); person(ctx, w * .5, h * (.85 - .32 * k), h * .026, -Math.PI / 2); ctx.fillStyle = C.accent; ctx.fillRect(w * .66, h * .38, 8, 5); },
+  armored(ctx, t, w, h, s) { W(ctx, w, h, C.ground); road(ctx, w, h * .5, h * .35, true, 0); ctx.fillStyle = '#2b3036'; ctx.fillRect(0, h * .3, w, h * .2); ctx.fillStyle = '#5a6678'; ctx.beginPath(); ctx.roundRect(w * .18, h * .44, w * .3, h * .15, 6); ctx.fill(); ctx.fillStyle = 'rgba(10,12,16,.6)'; ctx.fillRect(w * .42, h * .46, w * .05, h * .06);
+    const k = (t % 8) / 8; person(ctx, w * (.5 + k * .3), h * .4, h * .022, 0); ctx.fillStyle = C.accent; ctx.fillRect(w * (.5 + k * .3) + 8, h * .4, 8, 6); person(ctx, w * .52, h * .52, h * .022, Math.PI); },
+  atmdamage(ctx, t, w, h, s) { W(ctx, w, h, '#12151a'); ctx.fillStyle = C.wall; ctx.fillRect(w * .1, 0, w * .8, h * .75); atmBox(ctx, w * .42, h * .25, w * .16, h * .4, .3);
+    const k = Math.sin(t * 7); person(ctx, w * .36, h * .62, h * .026, -.5 + k * .4); if (k > .6) { ctx.strokeStyle = 'rgba(255,220,150,.8)'; for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.moveTo(w * .42, h * .42); ctx.lineTo(w * .42 - 6 - i * 3, h * .42 - 8 + i * 4); ctx.stroke(); } } },
+});
+Object.assign(SCENES, { queue: SCENES.counter, plaza: SCENES.sidewalk, altercation: SCENES.struggle, unattended: SCENES.object });
 SCENES.default = SCENES.sidewalk;
 
 function drawScene(ctx, scene, t, w, h, seed = 3) {

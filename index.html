@@ -76,13 +76,13 @@
   <div id="counter" class="counter" aria-live="polite"></div>
 
   <aside id="runlog" class="glass" aria-live="polite" hidden>
-    <div class="rl-head"><span class="eyebrow" data-i18n="LIVE · PYTHON IN YOUR BROWSER">LIVE · PYTHON IN YOUR BROWSER</span><span id="rlState"></span></div>
+    <button class="rl-head" id="rlToggle" aria-expanded="true" data-i18n-title="Show or hide the log" title="Show or hide the log"><span class="eyebrow" data-i18n="LIVE · PYTHON IN YOUR BROWSER">LIVE · PYTHON IN YOUR BROWSER</span><span id="rlState"></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     <ol id="rlLines"></ol>
   </aside>
 
   <footer class="caption glass" id="caption" aria-live="polite">
     <div class="cap-text"><span class="cap-ref" id="capRef"></span><h2 id="capTitle"></h2><p id="capBody"></p></div>
-    <div class="cap-ctl"><button id="prev" aria-label="Previous step">←</button><button id="pause" aria-label="Pause">❚❚</button><button id="next" aria-label="Next step">→</button></div>
+    <div class="cap-ctl"><button id="prev" data-i18n-title="Previous step (←)" title="Previous step (←)">←</button><button id="pause" data-i18n-title="Pause (space)" title="Pause (space)">❚❚</button><button id="next" data-i18n-title="Next step (→)" title="Next step (→)">→</button></div>
     <div class="cap-progress"><i id="capBar"></i></div>
   </footer>
 </div>
