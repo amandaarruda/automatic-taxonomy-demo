@@ -1,11 +1,11 @@
-# Demonstração do Observable Evidence Atlas
+# Observable Evidence Atlas · demonstração
 
-[Abrir a demonstração](https://amandaarruda.github.io/automatic-taxonomy-demo/).
+[Abrir a demonstração](https://amandaarruda.github.io/automatic-taxonomy-demo/)
 
-Esta página pública permite explorar um atlas estático produzido a partir de 32 respostas arquivadas do InternVL3.5-8B para vídeos do conjunto UCF-Crime. Não há vídeos nem frames neste repositório. A interface é em português; as frases e os nomes derivados permanecem no idioma original das respostas do modelo.
+Esta página mostra, em sete passos animados, como o produto transforma um conjunto de vídeos em uma taxonomia de evidências visuais, e termina num Observable Evidence Atlas navegável.
 
-A amostra contém 96 evidências, 14 grupos e duas famílias candidatas. Os agrupamentos foram calculados com BGE e HDBSCAN; o tamanho mínimo de grupo 3 foi usado para tornar a pequena amostra explorável, enquanto o padrão alinhado ao artigo é 8. As previsões são do modelo, não rótulos de referência. Os nomes são propostas automáticas, não categorias validadas por pessoas.
+**Tudo aqui é simulado.** Os vídeos são animações sintéticas desenhadas no navegador e as respostas da VLM são frases roteirizadas. A partir das respostas, o processamento é o do próprio produto: validação do formato, embeddings BGE, agrupamento HDBSCAN, agrupamento das famílias, nomes automáticos e projeções. O resultado (945 vídeos sintéticos, 601 frases, 32 grupos, 4 famílias) não representa o desempenho de nenhum modelo.
 
-A página é apenas para consulta: ela não recebe vídeos e não executa modelos. Para analisar vídeos, o produto e a VLM devem ser executados localmente, usando os recursos da organização. Recomendamos InternVL3.5-8B; modelos alternativos precisam atender ao contrato de imagens e JSON.
+A página não envia dados a nenhum servidor e não recebe vídeos. Para analisar vídeos de verdade, o produto roda localmente, na infraestrutura de quem o utiliza.
 
-A estratégia de amostragem de frames da execução original não estava disponível nos registros. Os identificadores de vídeo são referências à origem, e os hashes de demonstração são derivados desses identificadores, não dos arquivos originais. Os dados exibidos devem ser interpretados junto dos termos e da licença do conjunto UCF-Crime e dos modelos utilizados.
+Componentes de terceiros: veja [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
