@@ -4,7 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0c0d10">
-  <meta name="description" content="A simulated walkthrough of automatic taxonomy discovery: synthetic videos, scripted model responses and the real clustering code, ending in an explorable Observable Evidence Atlas.">
+  <script>try{var t=localStorage.getItem("atlas-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+  <meta name="description" content="Choose synthetic videos and run the product's discovery code in your browser: embeddings, two clustering stages and an automatic taxonomy, ending in an explorable Observable Evidence Atlas.">
   <title>From video to taxonomy · Observable Evidence Atlas</title>
   <link rel="stylesheet" href="atlas/css/fonts.css">
   <link rel="stylesheet" href="demo.css">
@@ -18,28 +19,42 @@
     <a class="brand" href="./"><span class="t">Observable Evidence Atlas</span></a>
     <ol id="steps" aria-label="Pipeline steps"></ol>
     <div class="tools">
-      <span class="sim"><i></i>SIMULATED</span>
-      <a class="tool" href="atlas/index.html">Skip to atlas <span aria-hidden="true">→</span></a>
+      <span class="sim"><i></i><span data-i18n="SIMULATED VLM">SIMULATED VLM</span></span>
+      <button class="tool icon lang-btn" id="langBtn" title="English / Português"><b>EN</b></button>
+      <button class="tool icon" id="themeBtn" data-i18n-title="Light / dark"><svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg><svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4"/></svg></button>
+      <a class="tool" id="skipLink" href="atlas/index.html"><span data-i18n="Skip to atlas">Skip to atlas</span> <span aria-hidden="true">→</span></a>
     </div>
   </header>
 
   <section id="intro" class="act-layer on">
     <div class="intro-in">
-      <div class="eyebrow">AUTOMATIC TAXONOMY DISCOVERY</div>
-      <h1>From video<br>to taxonomy</h1>
-      <p>Watch a corpus of videos become evidence, clusters and candidate families — with no manual step between them.</p>
-      <div class="intro-actions"><button class="go" id="play">Start the walkthrough <span aria-hidden="true">→</span></button><a class="go ghost" href="atlas/index.html">Open the atlas</a></div>
-      <p class="fine">Simulation. The videos are synthetic animations and the model responses are scripted. Everything after the responses — validation, embeddings, both clustering stages, names and projections — was computed by the product's own pipeline. Nothing you do here is sent anywhere.</p>
+      <div class="eyebrow" data-i18n="AUTOMATIC TAXONOMY DISCOVERY">AUTOMATIC TAXONOMY DISCOVERY</div>
+      <h1 data-i18n-html="From video<br>to taxonomy">From video<br>to taxonomy</h1>
+      <p data-i18n="Pick the videos, then watch them become evidence, clusters and candidate families — with no manual step between them.">Pick the videos, then watch them become evidence, clusters and candidate families — with no manual step between them.</p>
+      <div class="intro-actions"><button class="go" id="play"><span data-i18n="Choose the videos">Choose the videos</span> <span aria-hidden="true">→</span></button><a class="go ghost" href="atlas/index.html" data-i18n="Open the atlas">Open the atlas</a></div>
+      <p class="fine" data-i18n="intro-fine">Only the vision-language model is simulated: the videos are synthetic animations and their model responses are scripted and cached. Everything after that — contract validation, embeddings, both clustering stages, names and projections — runs the product's own Python code in your browser. Nothing is sent to any server.</p>
     </div>
   </section>
 
-  <section id="library" class="act-layer" aria-label="Video library"><div class="grid" id="libGrid"></div></section>
+  <section id="library" class="act-layer" aria-label="Video selection">
+    <div class="sel-head glass">
+      <div class="sel-title"><div class="eyebrow" data-i18n="01 · INPUT">01 · INPUT</div><h2 data-i18n="Choose the videos">Choose the videos</h2>
+        <p data-i18n="sel-lead">Click videos or whole scenes to include or exclude them. The discovery code then runs on exactly this selection.</p></div>
+      <div class="sel-presets" id="presets"></div>
+      <div class="sel-run">
+        <label class="mcs"><span>min_cluster_size</span><input type="number" id="mcs" min="2" max="30" value="8"><small data-i18n="8 = paper">8 = paper</small></label>
+        <div class="rt" id="runtime"><i></i><span></span></div>
+        <button class="go" id="runBtn"></button>
+      </div>
+    </div>
+    <div class="sel-grid" id="selGrid"></div>
+  </section>
 
   <section id="sampling" class="act-layer" aria-label="Frame sampling">
     <div class="player glass">
       <div class="screen"><canvas id="player" width="640" height="360"></canvas><div class="osd"><span id="osdCam">CAM</span><span id="osdTime">00:00.0</span></div><span class="wm">SYNTHETIC</span></div>
       <div class="timeline"><div class="track" id="track"></div><i id="playhead"></i></div>
-      <div class="sample-row"><span class="label">FRAME SAMPLING</span><div class="seg" id="modeSeg"><button data-mode="uniform16" class="on">16 frames · uniform</button><button data-mode="1fps">1 frame per second</button></div><span class="file" id="fileName"></span></div>
+      <div class="sample-row"><span class="label" data-i18n="FRAME SAMPLING">FRAME SAMPLING</span><div class="seg" id="modeSeg"><button data-mode="uniform16" class="on" data-i18n="16 frames · uniform">16 frames · uniform</button><button data-mode="1fps" data-i18n="1 frame per second">1 frame per second</button></div><span class="file" id="fileName"></span></div>
     </div>
     <div class="strip" id="strip"></div>
   </section>
@@ -47,18 +62,23 @@
   <section id="vlm" class="act-layer" aria-label="Model response">
     <div class="vlm-row">
       <div class="mini-strip" id="miniStrip"></div>
-      <div class="engine glass"><div class="engine-core"><i></i><i></i><i></i></div><b>Vision-language model</b><small>InternVL3.5 · local GPU</small><span class="pill">SIMULATED</span></div>
-      <div class="response glass"><div class="resp-head"><span>RESPONSE</span><span id="respVideo"></span></div><pre id="json"></pre><ul class="checks" id="checks"></ul></div>
+      <div class="engine glass"><div class="engine-core"><i></i><i></i><i></i></div><b data-i18n="Vision-language model">Vision-language model</b><small data-i18n="InternVL3.5 · local GPU">InternVL3.5 · local GPU</small><span class="pill" data-i18n="SIMULATED · CACHED">SIMULATED · CACHED</span></div>
+      <div class="response glass"><div class="resp-head"><span data-i18n="RESPONSE">RESPONSE</span><span id="respVideo"></span></div><pre id="json"></pre><ul class="checks" id="checks"></ul></div>
     </div>
     <div class="chips" id="chips"></div>
   </section>
 
   <section id="taxonomy" class="act-layer" aria-label="Taxonomy">
-    <div class="cta glass" id="cta"><div class="eyebrow">SIMULATED RESULT</div><h2 id="ctaTitle"></h2><p id="ctaText"></p><a class="go" href="atlas/index.html">Explore the atlas <span aria-hidden="true">→</span></a><button class="go ghost" id="replay">Replay</button></div>
+    <div class="cta glass" id="cta"><div class="eyebrow" id="ctaEyebrow"></div><h2 id="ctaTitle"></h2><p id="ctaText"></p><a class="go" id="ctaAtlas" href="atlas/index.html"><span data-i18n="Explore the atlas">Explore the atlas</span> <span aria-hidden="true">→</span></a><button class="go ghost" id="replay" data-i18n="Choose other videos">Choose other videos</button></div>
   </section>
 
   <div id="labels" aria-hidden="true"></div>
   <div id="counter" class="counter" aria-live="polite"></div>
+
+  <aside id="runlog" class="glass" aria-live="polite" hidden>
+    <div class="rl-head"><span class="eyebrow" data-i18n="LIVE · PYTHON IN YOUR BROWSER">LIVE · PYTHON IN YOUR BROWSER</span><span id="rlState"></span></div>
+    <ol id="rlLines"></ol>
+  </aside>
 
   <footer class="caption glass" id="caption" aria-live="polite">
     <div class="cap-text"><span class="cap-ref" id="capRef"></span><h2 id="capTitle"></h2><p id="capBody"></p></div>
@@ -66,8 +86,8 @@
     <div class="cap-progress"><i id="capBar"></i></div>
   </footer>
 </div>
-<script src="atlas/data/atlas-data.js"></script>
-<script src="demo-data.js"></script>
+<script src="atlas/js/i18n.js"></script>
+<script src="data/default-run.js"></script>
 <script src="scenes.js"></script>
 <script src="demo.js"></script>
 </body>

@@ -374,3 +374,4 @@ table.tbl{width:100%;border-collapse:collapse;font-size:calc(12px*var(--fs))}
 @media (max-width:1420px){#helpBtn span{display:none} #helpBtn{padding:0 9px}}
 @media (max-width:900px){.src-grid{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) minmax(0,1fr)}}
 .tbl td{white-space:nowrap} .kgrid{grid-template-columns:repeat(auto-fit,minmax(104px,1fr))}
+.lang-btn b{font:600 10.5px var(--mono);letter-spacing:.06em}

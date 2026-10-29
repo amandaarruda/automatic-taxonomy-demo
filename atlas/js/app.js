@@ -12,7 +12,8 @@ const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const ease = t => 1 - Math.pow(1 - t, 3);
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const fmt = n => Number(n || 0).toLocaleString('en-US');
-const plural = (n, one, many) => `${fmt(n)} ${n === 1 ? one : (many || one + 's')}`;
+const L = window.L || (k => k);
+const plural = (n, one, many) => `${fmt(n)} ${L(n === 1 ? one : (many || one + 's'))}`;
 
 /* ------------------------------------------------------------------ data */
 const META = A.meta, SYMS = ['●', '◆', '■', '▲'];
@@ -24,7 +25,10 @@ const CAT_ORDER = ['Anomalous', 'Predominantly Anomalous', 'Neutral', 'Predomina
 const CL = A.clusters; for (const k in CL) CL[k].key = k;
 const NCL = Object.keys(CL).length, NFAM = FAM.filter(f => !f.unassigned).length;
 const PRED = META.composition !== 'reference';
-const SHARE_TXT = PRED ? 'share of supporting videos the VLM flagged as anomalous' : 'share of supporting videos labelled anomalous (reference labels)';
+const SHARE_TXT = L(PRED ? 'share of supporting videos the VLM flagged as anomalous' : 'share of supporting videos labelled anomalous (reference labels)');
+const CATN = c => L(c);
+const fname = f => f.unassigned ? L(f.name) : f.name;
+const diagText = d => (window.I18N && I18N.lang === 'pt' ? d.message : d.message_en) || d.message_en || d.message;
 // Saturated, hue-matched variants of the legend colours, used ONLY in the glowing 3D clouds.
 const VIZ_L = { 'Anomalous': '#d11f2a', 'Predominantly Anomalous': '#ec6f7a', 'Neutral': '#5b7fe6', 'Predominantly Normal': '#5fae4e', 'Normal': '#1f9a48' };
 const VIZ = { 'Anomalous': '#ff2d2d', 'Predominantly Anomalous': '#ff9a9a', 'Neutral': '#7aa2ff', 'Predominantly Normal': '#9be58a', 'Normal': '#2fbf5a' };
@@ -270,14 +274,14 @@ function setHover(k) { if (S.hover === k) return; S.hover = k; recompute(cur());
 const tip = $('#tip');
 function srcLine(src) { // "video · window · decision" for the first source, plus how many more
   if (!src || !src.length) return ''; const [vi, w, a] = src[0], vd = VID[vi];
-  return `video ${esc(vd ? vd.id : '?')}${vd && vd.windows > 1 ? ` · window ${w + 1}` : ''} · VLM ${a ? 'anomalous' : 'normal'}${src.length > 1 ? ` · +${src.length - 1} more` : ''}`;
+  return `${L('video {v}', { v: esc(vd ? vd.id : '?') })}${vd && vd.windows > 1 ? ` · ${L('window {n}', { n: w + 1 })}` : ''} · ${L(a ? 'VLM anomalous' : 'VLM normal')}${src.length > 1 ? ` · ${L('+{n} more', { n: src.length - 1 })}` : ''}`;
 }
 function showTip(i, v) {
   const k = v.keyArr[i];
-  if (!k) { const d = A.models[v.key]; tip.style.setProperty('--c', 'var(--quiet)'); tip.innerHTML = `<div class="tf noise"><i></i>Noise · not assigned to a cluster</div><p>“${esc(d.ev[i])}”</p><small>${srcLine(d.src[i])}</small>`; placeTip(hoverPx.x, hoverPx.y); return; }
+  if (!k) { const d = A.models[v.key]; tip.style.setProperty('--c', 'var(--quiet)'); tip.innerHTML = `<div class="tf noise"><i></i>${L('Noise · not assigned to a cluster')}</div><p>“${esc(d.ev[i])}”</p><small>${srcLine(d.src[i])}</small>`; placeTip(hoverPx.x, hoverPx.y); return; }
   const c = CL[k], f = famOf(c.fam); let body;
-  if (v.key === 'families') body = `<p>${MODELS[c.model].sym} ${MODELS[c.model].short} · cluster ${c.id} · ${plural(c.n, 'statement')}</p><small>${c.pct}% anomalous videos · ${esc(c.cat)}</small>`;
-  else { const d = A.models[v.key]; body = `<p>“${esc(d.ev[i])}”</p><small>${srcLine(d.src[i])} · cluster ${c.id}</small>`; }
+  if (v.key === 'families') body = `<p>${MODELS[c.model].sym} ${MODELS[c.model].short} · ${L('cluster {n}', { n: c.id })} · ${plural(c.n, 'statement')}</p><small>${L('{p}% anomalous videos', { p: c.pct })} · ${esc(CATN(c.cat))}</small>`;
+  else { const d = A.models[v.key]; body = `<p>“${esc(d.ev[i])}”</p><small>${srcLine(d.src[i])} · ${L('cluster {n}', { n: c.id })}</small>`; }
   tip.style.setProperty('--c', f.color); tip.innerHTML = `<div class="tf"><i></i>${f.code} · ${esc(f.name)}</div><b>${esc(c.name)}</b>${body}`;
   placeTip(hoverPx.x, hoverPx.y);
 }
@@ -330,36 +334,36 @@ function famListHTML(view) {
     if (q && !mk.length) return ''; any = true;
     const open = on || (q && mk.length);
     const subs = open ? `<div class="subs">${(q ? mk : kids).map(k => srowHTML(k, view)).join('')}</div>` : '';
-    return `<button class="frow ${on ? 'on' : ''} ${off ? 'off' : ''}" style="--c:${f.color}" data-f="${f.id}" title="${esc(f.code)} · ${esc(f.name)}" ${off ? 'tabindex="-1"' : ''}><span class="sw"></span><span class="cd">${esc(f.code)}</span><span class="nm">${esc(f.name)}</span><span class="ct">${q ? mk.length : (off ? '—' : cnt)}</span></button>${subs}`;
+    return `<button class="frow ${on ? 'on' : ''} ${off ? 'off' : ''}" style="--c:${f.color}" data-f="${f.id}" title="${esc(f.code)} · ${esc(f.name)}" ${off ? 'tabindex="-1"' : ''}><span class="sw"></span><span class="cd">${esc(f.code)}</span><span class="nm">${esc(fname(f))}</span><span class="ct">${q ? mk.length : (off ? '—' : cnt)}</span></button>${subs}`;
   }).join('');
-  return any ? html : `<div class="empty">${NCL ? 'No family or cluster matches your search.' : 'No clusters were found in this run.'}</div>`;
+  return any ? html : `<div class="empty">${L(NCL ? 'No family or cluster matches your search.' : 'No clusters were found in this run.')}</div>`;
 }
 function listHTML(view) {
   const isFam = view === 'families', mode = isFam ? 'family' : S.mode, q = S.qset;
   const keys = Object.keys(CL).filter(k => inScope(k, view) && (!q || q.has(k)));
-  if (mode === 'family') return `<div class="sec"><h4>Candidate families <button id="clearFam" style="${S.family ? '' : 'display:none'}">Clear</button></h4><div class="flist" id="flist">${famListHTML(view)}</div></div>`;
+  if (mode === 'family') return `<div class="sec"><h4>${L('Candidate families')} <button id="clearFam" style="${S.family ? '' : 'display:none'}">${L('Clear')}</button></h4><div class="flist" id="flist">${famListHTML(view)}</div></div>`;
   if (mode === 'sub') {
     const rows = keys.sort((a, b) => CL[b].n - CL[a].n || CL[a].id - CL[b].id);
-    return `<div class="sec"><h4>Clusters · ${rows.length}</h4>${filtersHTML()}<p class="lsub">Each dot is the cluster's own colour in the cloud. Sorted by number of statements.</p>
-      <div class="flist">${rows.length ? rows.map(k => srowHTML(k, view, { wide: 1, dot: `<i class="sw2" style="background:${subHex(k)}"></i>`, right: CL[k].n })).join('') : '<div class="empty">No cluster matches your search.</div>'}</div></div>`;
+    return `<div class="sec"><h4>${L('Clusters · {n}', { n: rows.length })}</h4>${filtersHTML()}<p class="lsub">${L("Each dot is the cluster's own colour in the cloud. Sorted by number of statements.")}</p>
+      <div class="flist">${rows.length ? rows.map(k => srowHTML(k, view, { wide: 1, dot: `<i class="sw2" style="background:${subHex(k)}"></i>`, right: CL[k].n })).join('') : `<div class="empty">${L('No cluster matches your search.')}</div>`}</div></div>`;
   }
   const inModel = Object.keys(CL).filter(k => inScope(k, view)), cnt = c => inModel.filter(k => CL[k].cat === c).length, pts = c => inModel.reduce((s, k) => s + (CL[k].cat === c ? CL[k].n : 0), 0);
   const rows = keys.filter(k => !S.cat || CL[k].cat === S.cat).sort((a, b) => CL[b].pct - CL[a].pct || CL[b].n - CL[a].n);
-  return `<div class="sec"><h4>Anomaly category <button id="clearCat" style="${S.cat ? '' : 'display:none'}">Clear</button></h4><div class="legend">${CAT_ORDER.map(c => `<button class="lg ${S.cat === c ? 'on' : ''} ${S.cat && S.cat !== c ? 'off' : ''}" data-cat="${c}" style="--c:${vizHex(c)}"><i class="sq"></i><span><b>${c}</b><small>${pts(c)} statements · ${CAT[c].rule}%</small></span><span class="ct">${cnt(c)}</span></button>`).join('')}</div></div>
-    <div class="sec"><h4>Clusters · ${rows.length}</h4>${filtersHTML()}<p class="lsub">Sorted by ${esc(SHARE_TXT)}.</p><div class="flist">${rows.length ? rows.map(k => srowHTML(k, view, { dot: `<i class="dot" style="background:${vizHex(CL[k].cat)}"></i>` })).join('') : '<div class="empty">No cluster matches these filters.</div>'}</div></div>`;
+  return `<div class="sec"><h4>${L('Anomaly category')} <button id="clearCat" style="${S.cat ? '' : 'display:none'}">${L('Clear')}</button></h4><div class="legend">${CAT_ORDER.map(c => `<button class="lg ${S.cat === c ? 'on' : ''} ${S.cat && S.cat !== c ? 'off' : ''}" data-cat="${c}" style="--c:${vizHex(c)}"><i class="sq"></i><span><b>${CATN(c)}</b><small>${L('{n} statements', { n: pts(c) })} · ${CAT[c].rule.replace(' and ', L(' and '))}%</small></span><span class="ct">${cnt(c)}</span></button>`).join('')}</div></div>
+    <div class="sec"><h4>${L('Clusters · {n}', { n: rows.length })}</h4>${filtersHTML()}<p class="lsub">${L('Sorted by {x}.', { x: esc(SHARE_TXT) })}</p><div class="flist">${rows.length ? rows.map(k => srowHTML(k, view, { dot: `<i class="dot" style="background:${vizHex(CL[k].cat)}"></i>` })).join('') : `<div class="empty">${L('No cluster matches these filters.')}</div>`}</div></div>`;
 }
 function renderList(keepScroll = true) {
   const host = $('#listHost'); if (!host) return; const sc = panelBody.scrollTop; host.innerHTML = listHTML(S.view); if (keepScroll) panelBody.scrollTop = sc;
 }
 function diagHTML(filter) {
   const ds = (META.diagnostics || []).filter(d => !filter || !d.model || d.model === filter);
-  return ds.map(d => `<div class="diag"><b>${esc(d.code.replace(/_/g, ' ').toUpperCase())}</b>${esc(d.message_en || d.message)}</div>`).join('');
+  return ds.map(d => `<div class="diag"><b>${esc(d.code.replace(/_/g, ' ').toUpperCase())}</b>${esc(diagText(d))}</div>`).join('');
 }
 function lead(view) {
-  if (view === 'families') return ['Family field', `${plural(NFAM, 'candidate family', 'candidate families')}`,
-    `Each node is a first-stage cluster, positioned by the normalised centroid of its evidence embeddings.${multi ? ' ' + MKEYS.map(m => `${MODELS[m].sym} ${MODELS[m].label}`).join(' · ') + '.' : ''} Tethers join the nodes the second stage grouped into one family.`];
+  if (view === 'families') return [L('Family field'), `${plural(NFAM, 'candidate family', 'candidate families')}`,
+    `${L('Each node is a first-stage cluster, positioned by the normalised centroid of its evidence embeddings.')}${multi ? ' ' + MKEYS.map(m => `${MODELS[m].sym} ${MODELS[m].label}`).join(' · ') + '.' : ''} ${L('Tethers join the nodes the second stage grouped into one family.')}`];
   const m = A.models[view];
-  return ['Evidence space', MODELS[view].label, `Each point is one unique evidence statement written by ${esc(MODELS[view].label)}, placed so that similar descriptions sit together. Points sharing a colour belong to the same candidate family; grey points are noise.`];
+  return [L('Evidence space'), MODELS[view].label, L('Each point is one unique evidence statement written by {model}, placed so that similar descriptions sit together. Points sharing a colour belong to the same candidate family; grey points are noise.', { model: esc(MODELS[view].label) })];
 }
 function renderPanel() {
   const v = S.view; if (v === 'taxonomy') return renderTaxPanel();
@@ -367,19 +371,19 @@ function renderPanel() {
   const fx = (n, l) => `<b>${fmt(n)}</b> ${l}`;
   const sharedBy = FAM.filter(f => !f.unassigned && MKEYS.every(k => f.n[k])).length;
   const noise = isFam ? 0 : m.cl.filter(c => c < 0).length;
-  const stats = (isFam ? [fx(NCL, 'clusters'), fx(NFAM, 'families'), ...(multi ? [fx(sharedBy, 'shared by all models')] : [])]
-    : [fx(m.cl.length, 'statements'), fx(m.keys.length, 'clusters'), fx(noise, 'noise'), fx(FAM.filter(f => f.n[v] && !f.unassigned).length, 'families')]).join(' · ');
-  const seg = isFam ? '' : `<div class="sec"><h4>Colour by</h4><div class="seg" id="modeSeg">${[['family', 'Family'], ['sub', 'Cluster'], ['anom', 'Anomaly']].map(([k, l]) => `<button data-m="${k}" class="${S.mode === k ? 'on' : ''}">${l}</button>`).join('')}</div>
+  const stats = (isFam ? [fx(NCL, L('clusters')), fx(NFAM, L('families')), ...(multi ? [fx(sharedBy, L('shared by all models'))] : [])]
+    : [fx(m.cl.length, L('statements')), fx(m.keys.length, L('clusters')), fx(noise, L('noise')), fx(FAM.filter(f => f.n[v] && !f.unassigned).length, L('families'))]).join(' · ');
+  const seg = isFam ? '' : `<div class="sec"><h4>${L('Colour by')}</h4><div class="seg" id="modeSeg">${[['family', 'Family'], ['sub', 'Cluster'], ['anom', 'Anomaly']].map(([k, l]) => `<button data-m="${k}" class="${S.mode === k ? 'on' : ''}">${L(l)}</button>`).join('')}</div>
     <p class="lead" style="font-size:calc(11px*var(--fs));margin-top:8px" id="modeNote"></p></div>`;
   panelBody.innerHTML = `<h2>${esc(h)}</h2><p class="lead">${ld}</p><p class="facts">${stats}</p>${diagHTML(isFam ? null : MODELS[v].label)}${seg}
-    <div class="sec"><h4>Find <span style="font:400 calc(11px*var(--fs)) var(--sans);color:var(--quiet)">press / · Enter selects</span></h4><input class="search" id="lsSearch" type="search" placeholder="Search clusters, families, F01…" value="${esc(S.q)}" autocomplete="off"></div>
+    <div class="sec"><h4>${L('Find')} <span style="font:400 calc(11px*var(--fs)) var(--sans);color:var(--quiet)">${L('press / · Enter selects')}</span></h4><input class="search" id="lsSearch" type="search" placeholder="${L('Search clusters, families, F01…')}" value="${esc(S.q)}" autocomplete="off"></div>
     <div id="listHost"></div>
-    <div class="note">${isFam ? 'Each point is a normalised BGE centroid. ' : 'Axes are not interpretable — distances are qualitative. '}Families come from automatic agglomerative clustering of centroids; names are keywords taken from the cluster's own statements. Nothing here was reviewed by a person.</div>`;
+    <div class="note">${L(isFam ? 'Each point is a normalised BGE centroid. ' : 'Axes are not interpretable — distances are qualitative. ')}${L("Families come from automatic agglomerative clustering of centroids; names are keywords taken from the cluster's own statements. Nothing here was reviewed by a person.")}</div>`;
   renderList(false); updateModeNote();
 }
 function updateModeNote() {
   const n = $('#modeNote'); if (!n) return;
-  n.innerHTML = { family: 'Hue = candidate family, consistent across all views. Grey = noise.', sub: 'One colour per cluster. Every cluster is listed below.', anom: CAT_ORDER.map(c => `<span style="color:${vizHex(c)}">■</span> ${c}`).join('<br>') + `<br>Based on the ${esc(SHARE_TXT)}.` }[S.mode];
+  n.innerHTML = { family: L('Hue = candidate family, consistent across all views. Grey = noise.'), sub: L('One colour per cluster. Every cluster is listed below.'), anom: CAT_ORDER.map(c => `<span style="color:${vizHex(c)}">■</span> ${CATN(c)}`).join('<br>') + '<br>' + L('Based on the {x}.', { x: esc(SHARE_TXT) }) }[S.mode];
 }
 function refreshPanelSelection() {
   if (S.view === 'taxonomy') { renderTaxPanel(true); return; }
@@ -407,14 +411,14 @@ function evAll(k) { // every statement of the cluster with its provenance, nothi
   const d = A.models[CL[k].model]; return (evByCluster[k] || []).map(i => ({ t: d.ev[i], src: d.src[i] })).sort((a, b) => b.src.length - a.src.length);
 }
 function citeHTML(src) {
-  const shown = src.slice(0, 3).map(([vi, w, a]) => { const vd = VID[vi]; return `<button class="vlink" data-vid="${vi}">${esc(vd ? vd.id : '?')}${vd && vd.windows > 1 ? `·w${w + 1}` : ''}</button><span class="pred a${a}">${a ? 'ANOM' : 'NORM'}</span>`; });
+  const shown = src.slice(0, 3).map(([vi, w, a]) => { const vd = VID[vi]; return `<button class="vlink" data-vid="${vi}">${esc(vd ? vd.id : '?')}${vd && vd.windows > 1 ? `·w${w + 1}` : ''}</button><span class="pred a${a}">${L(a ? 'ANOM' : 'NORM')}</span>`; });
   return shown.join(' ') + (src.length > 3 ? ` <span>+${src.length - 3}</span>` : '');
 }
 function actions(model) { // cross-view jumps, never offering the view we are already in
   const v = S.view, o = [];
-  if (v !== 'taxonomy' && NFAM) o.push('<button class="btn pri" data-act="matrix">Show in taxonomy</button>');
-  if (v !== 'families') o.push(`<button class="btn ${o.length ? '' : 'pri'}" data-act="fam3d">Open in family map</button>`);
-  (model ? [model] : MKEYS).filter(m => m !== v).forEach(m => o.push(`<button class="btn ${o.length ? '' : 'pri'}" data-act="cloud" data-m="${m}">Open in ${esc(MODELS[m].short)} cloud</button>`));
+  if (v !== 'taxonomy' && NFAM) o.push(`<button class="btn pri" data-act="matrix">${L('Show in taxonomy')}</button>`);
+  if (v !== 'families') o.push(`<button class="btn ${o.length ? '' : 'pri'}" data-act="fam3d">${L('Open in family map')}</button>`);
+  (model ? [model] : MKEYS).filter(m => m !== v).forEach(m => o.push(`<button class="btn ${o.length ? '' : 'pri'}" data-act="cloud" data-m="${m}">${L('Open in {m} cloud', { m: esc(MODELS[m].short) })}</button>`));
   return o.join('');
 }
 const FLAG_TXT = { appearance: 'Dominated by appearance cues (colour, clothing)', image_quality: 'Dominated by image-quality or viewpoint descriptions', generic: 'Dominated by generic “nothing unusual” statements' };
@@ -426,22 +430,22 @@ function renderInspector() {
     const c = CL[k], fam = famOf(c.fam), cat = CAT[c.cat], samples = evAll(k), cap = 250;
     insBody.innerHTML = `<h3>${esc(c.name)}</h3>
       <button class="fchip" style="--c:${fam.color}" data-act="family" data-f="${fam.id}"><i></i><b>${esc(fam.code)}</b>${esc(fam.name)}</button>
-      <div class="rep"><small>REPRESENTATIVE STATEMENT</small>${esc(c.rep)}</div>
+      <div class="rep"><small>${L('REPRESENTATIVE STATEMENT')}</small>${esc(c.rep)}</div>
       ${c.topics.length ? `<div class="topics">${c.topics.map(t => `<span>${esc(t)}</span>`).join('')}</div>` : ''}
-      ${c.flags.map(x => `<span class="flag">⚑ ${esc(FLAG_TXT[x] || x)}</span>`).join('')}${c.excluded ? '<span class="flag">Excluded from the second stage by configuration</span>' : ''}
-      <div class="meter" style="--c:${cat.color}"><div class="row"><div class="big">${pct(c.pct)}<sup>%</sup></div><span class="cat"><i></i>${esc(c.cat)}</span></div><div class="bar"><i style="width:0" data-w="${c.pct}%"></i></div><small>${esc(SHARE_TXT)} · ${esc(cat.text)}</small></div>
-      <dl class="kv"><dt>Model</dt><dd>${MODELS[c.model].sym} ${esc(MODELS[c.model].label)} · HDBSCAN cluster ${c.id}</dd><dt>Evidence</dt><dd>${plural(c.n, 'unique statement')} · ${plural(c.occ, 'occurrence')}</dd><dt>Videos</dt><dd>${plural(c.vids, 'supporting video')}</dd></dl>
+      ${c.flags.map(x => `<span class="flag">⚑ ${esc(L(FLAG_TXT[x] || x))}</span>`).join('')}${c.excluded ? `<span class="flag">${L('Excluded from the second stage by configuration')}</span>` : ''}
+      <div class="meter" style="--c:${cat.color}"><div class="row"><div class="big">${pct(c.pct)}<sup>%</sup></div><span class="cat"><i></i>${esc(CATN(c.cat))}</span></div><div class="bar"><i style="width:0" data-w="${c.pct}%"></i></div><small>${esc(SHARE_TXT)} · ${esc(L(cat.text))}</small></div>
+      <dl class="kv"><dt>${L('Model')}</dt><dd>${MODELS[c.model].sym} ${esc(MODELS[c.model].label)} · ${L('HDBSCAN cluster {n}', { n: c.id })}</dd><dt>${L('Evidence')}</dt><dd>${plural(c.n, 'unique statement')} · ${plural(c.occ, 'occurrence')}</dd><dt>${L('Videos')}</dt><dd>${plural(c.vids, 'supporting video')}</dd></dl>
       <div class="actions">${actions(c.model)}</div>
-      <div class="sec"><h4>Evidence statements <span style="font:400 calc(11px*var(--fs)) var(--sans);color:var(--quiet)">${samples.length}${samples.length > cap ? ` · first ${cap}` : ''} · click a video to trace it</span></h4><div class="ev" style="--c:${fam.color}">${samples.slice(0, cap).map(s => `<blockquote>${esc(s.t)}<cite>${citeHTML(s.src)}</cite></blockquote>`).join('')}</div></div>`;
+      <div class="sec"><h4>${L('Evidence statements')} <span style="font:400 calc(11px*var(--fs)) var(--sans);color:var(--quiet)">${samples.length}${samples.length > cap ? ` · ${L('first {n}', { n: cap })}` : ''} · ${L('click a video to trace it')}</span></h4><div class="ev" style="--c:${fam.color}">${samples.slice(0, cap).map(s => `<blockquote>${esc(s.t)}<cite>${citeHTML(s.src)}</cite></blockquote>`).join('')}</div></div>`;
   } else {
     const fam = famOf(f), cats = CAT_ORDER.filter(c => fam.cats[c]);
-    insBody.innerHTML = `<h3>${esc(fam.name)}</h3>
-      ${fam.rep ? `<div class="rep"><small>${fam.unassigned ? 'NOTE' : 'REPRESENTATIVE STATEMENT'}</small>${esc(fam.rep)}</div>` : ''}
+    insBody.innerHTML = `<h3>${esc(fname(fam))}</h3>
+      ${fam.rep ? `<div class="rep"><small>${L(fam.unassigned ? 'NOTE' : 'REPRESENTATIVE STATEMENT')}</small>${esc(fam.unassigned ? L(fam.rep) : fam.rep)}</div>` : ''}
       ${fam.topics.length ? `<div class="topics">${fam.topics.map(t => `<span>${esc(t)}</span>`).join('')}</div>` : ''}
-      <dl class="kv"><dt>Family</dt><dd>${esc(fam.code)} · ${fam.unassigned ? 'clusters without a family' : 'automatic candidate grouping'}</dd><dt>Clusters</dt><dd>${fam.keys.length}${multi ? ' · ' + modelMix(fam) : ''}</dd><dt>Evidence</dt><dd>${plural(MKEYS.reduce((s, m) => s + fam.pts[m], 0), 'statement')}</dd></dl>
-      <div class="meter" style="--c:${fam.color}"><div class="row"><div class="big">${pct(fam.mean)}<sup>%</sup></div><span class="cat" style="color:var(--muted)">mean anomalous-video share</span></div>
-      <div class="dist" style="margin-top:14px">${cats.map(c => `<i title="${c}" style="--c:${CAT[c].color};flex:${fam.cats[c]}"></i>`).join('')}</div><small>${cats.map(c => `${fam.cats[c]} ${c.toLowerCase()}`).join(' · ')}</small></div>
-      <div class="sec"><h4>Clusters</h4><div class="subs" style="margin:0;border:0;padding:0">${fam.keys.map(k => `<button class="srow" data-k="${esc(k)}">${catDot(k)}<span class="nm">${multi ? MODELS[CL[k].model].sym + ' ' : ''}${esc(CL[k].name)}</span><span class="pc">${pct(CL[k].pct)}%</span></button>`).join('')}</div></div>
+      <dl class="kv"><dt>${L('Family')}</dt><dd>${esc(fam.code)} · ${L(fam.unassigned ? 'clusters without a family' : 'automatic candidate grouping')}</dd><dt>${L('Clusters')}</dt><dd>${fam.keys.length}${multi ? ' · ' + modelMix(fam) : ''}</dd><dt>${L('Evidence')}</dt><dd>${plural(MKEYS.reduce((s, m) => s + fam.pts[m], 0), 'statement')}</dd></dl>
+      <div class="meter" style="--c:${fam.color}"><div class="row"><div class="big">${pct(fam.mean)}<sup>%</sup></div><span class="cat" style="color:var(--muted)">${L('mean anomalous-video share')}</span></div>
+      <div class="dist" style="margin-top:14px">${cats.map(c => `<i title="${c}" style="--c:${CAT[c].color};flex:${fam.cats[c]}"></i>`).join('')}</div><small>${cats.map(c => `${fam.cats[c]} ${CATN(c).toLowerCase()}`).join(' · ')}</small></div>
+      <div class="sec"><h4>${L('Clusters')}</h4><div class="subs" style="margin:0;border:0;padding:0">${fam.keys.map(k => `<button class="srow" data-k="${esc(k)}">${catDot(k)}<span class="nm">${multi ? MODELS[CL[k].model].sym + ' ' : ''}${esc(CL[k].name)}</span><span class="pc">${pct(CL[k].pct)}%</span></button>`).join('')}</div></div>
       <div class="actions">${actions(null)}</div>`;
   }
   requestAnimationFrame(() => $$('.bar i', insBody).forEach(b => b.style.width = b.dataset.w));
@@ -480,13 +484,13 @@ const tax = (() => {
   function build() {
     if (built) return; built = true;
     host.classList.toggle('empty', !NCL);
-    if (!NCL) { $('#taxEmptyText').textContent = (META.diagnostics || []).map(d => d.message_en || d.message).join(' ') || 'The run produced no clusters.'; return; }
+    if (!NCL) { $('#taxEmptyText').textContent = (META.diagnostics || []).map(d => diagText(d)).join(' ') || L('The run produced no clusters.'); return; }
     FAM.forEach(f => f.keys.forEach((k, r) => {
       const c = CL[k], el = document.createElement('div'); el.className = 'cell pre' + (c.cat === 'Anomalous' ? ' glow' : ''); el.dataset.k = k; el.style.setProperty('--g', CAT[c.cat].color);
       el.innerHTML = `<svg viewBox="0 0 100 100">${shapeSVG(c.model, CAT[c.cat].color)}</svg>`; el.setAttribute('role', 'button'); el.setAttribute('aria-label', `${f.code} ${c.name}, ${c.cat}`);
       cellsEl.appendChild(el); cells.push({ el, k, f: f.id, r, c });
     }));
-    FAM.forEach(f => { const el = document.createElement('div'); el.className = 'fl'; el.style.setProperty('--c', f.color); el.innerHTML = `<i></i><span class="fc">${esc(f.code)}</span><span class="fn">${esc(f.name)}</span>`; el.dataset.f = f.id; el.setAttribute('aria-label', f.code + ' ' + f.name); flEl.appendChild(el); flabs[f.id] = el; });
+    FAM.forEach(f => { const el = document.createElement('div'); el.className = 'fl'; el.style.setProperty('--c', f.color); el.innerHTML = `<i></i><span class="fc">${esc(f.code)}</span><span class="fn">${esc(fname(f))}</span>`; el.dataset.f = f.id; el.setAttribute('aria-label', f.code + ' ' + f.name); flEl.appendChild(el); flabs[f.id] = el; });
     cellsEl.addEventListener('mouseover', e => { const el = e.target.closest('.cell'); if (el && !panning) { hoverCell(el.dataset.k); cellTip(el.dataset.k, e); } });
     cellsEl.addEventListener('mousemove', e => { if (hovC && !panning) cellTip(hovC, e); });
     cellsEl.addEventListener('mouseleave', () => { hoverCell(null); hideTip(); });
@@ -554,21 +558,21 @@ const tax = (() => {
   }
   function cellTip(k, e) {
     const c = CL[k], f = famOf(c.fam); tip.style.setProperty('--c', f.color);
-    tip.innerHTML = `<div class="tf"><i></i>${esc(f.code)} · ${esc(f.name)}</div><b>${esc(c.name)}</b><p>“${esc(c.rep)}”</p><small>${MODELS[c.model].sym} ${esc(MODELS[c.model].short)} #${c.id} · ${plural(c.n, 'statement')} · ${pct(c.pct)}% anomalous videos · ${esc(c.cat)}</small>`;
+    tip.innerHTML = `<div class="tf"><i></i>${esc(f.code)} · ${esc(fname(f))}</div><b>${esc(c.name)}</b><p>“${esc(c.rep)}”</p><small>${MODELS[c.model].sym} ${esc(MODELS[c.model].short)} #${c.id} · ${plural(c.n, 'statement')} · ${L('{p}% anomalous videos', { p: pct(c.pct) })} · ${esc(CATN(c.cat))}</small>`;
     placeTip(e.clientX, e.clientY);
   }
   function famTip(id, e) {
     const f = famOf(id); tip.style.setProperty('--c', f.color);
-    tip.innerHTML = `<div class="tf"><i></i>${esc(f.code)} · ${f.unassigned ? 'not grouped' : 'candidate family'}</div><b>${esc(f.name)}</b><p>${plural(f.keys.length, 'cluster')}${multi ? ' · ' + modelMix(f) : ''}</p><small>${pct(f.mean)}% mean anomalous-video share</small>`; placeTip(e.clientX, e.clientY);
+    tip.innerHTML = `<div class="tf"><i></i>${esc(f.code)} · ${L(f.unassigned ? 'not grouped' : 'candidate family')}</div><b>${esc(fname(f))}</b><p>${plural(f.keys.length, 'cluster')}${multi ? ' · ' + modelMix(f) : ''}</p><small>${pct(f.mean)}% · ${L('mean anomalous-video share')}</small>`; placeTip(e.clientX, e.clientY);
   }
   let hovC = null, hovF = 0;
   function hoverCell(k) { hovC = k; hovF = 0; setReadout(); }
   function hoverFam(f) { hovF = f; hovC = null; setReadout(); }
   function setReadout() {
     const k = hovC || S.cluster, f = hovF || (k ? 0 : S.family);
-    if (k) { const c = CL[k], fam = famOf(c.fam); readout.innerHTML = `<div class="ring" style="--c:${CAT[c.cat].color};--p:${c.pct}"><span>${pct(c.pct)}%</span></div><div class="cap" style="color:${fam.color}">${esc(fam.code)} · ${MODELS[c.model].sym} ${esc(MODELS[c.model].short)} #${c.id}</div><div class="nm" style="margin-top:6px">${esc(c.name)}</div><div class="sub">${esc(c.cat)} · ${plural(c.n, 'statement')}</div>`; }
-    else if (f) { const fam = famOf(f); readout.innerHTML = `<div class="big" style="color:${fam.color}">${esc(fam.code)}</div><div class="cap">${plural(fam.keys.length, 'cluster')} · ${pct(fam.mean)}% mean anomalous</div><div class="nm" style="margin-top:8px">${esc(fam.name)}</div><div class="sub">${multi ? modelMix(fam) : esc(fam.rep)}</div>`; }
-    else { const vis = cells.filter(o => !o.el.classList.contains('dim')).length; readout.innerHTML = `<div class="big">${vis}</div><div class="cap">${vis === NCL ? `clusters · ${plural(NFAM, 'candidate family', 'candidate families')}` : 'clusters match filters'}</div><div class="sub">${geom && geom.wheel ? 'Hover a cell to read it, click to inspect. Ring = rank inside its family, largest first.' : 'Hover a cell to read it, click to inspect. Rows = rank inside the family.'}</div>`; }
+    if (k) { const c = CL[k], fam = famOf(c.fam); readout.innerHTML = `<div class="ring" style="--c:${CAT[c.cat].color};--p:${c.pct}"><span>${pct(c.pct)}%</span></div><div class="cap" style="color:${fam.color}">${esc(fam.code)} · ${MODELS[c.model].sym} ${esc(MODELS[c.model].short)} #${c.id}</div><div class="nm" style="margin-top:6px">${esc(c.name)}</div><div class="sub">${esc(CATN(c.cat))} · ${plural(c.n, 'statement')}</div>`; }
+    else if (f) { const fam = famOf(f); readout.innerHTML = `<div class="big" style="color:${fam.color}">${esc(fam.code)}</div><div class="cap">${plural(fam.keys.length, 'cluster')} · ${L('{p}% mean anomalous', { p: pct(fam.mean) })}</div><div class="nm" style="margin-top:8px">${esc(fname(fam))}</div><div class="sub">${multi ? modelMix(fam) : esc(fam.rep)}</div>`; }
+    else { const vis = cells.filter(o => !o.el.classList.contains('dim')).length; readout.innerHTML = `<div class="big">${vis}</div><div class="cap">${vis === NCL ? `${L('clusters')} · ${plural(NFAM, 'candidate family', 'candidate families')}` : L('clusters match filters')}</div><div class="sub">${L(geom && geom.wheel ? 'Hover a cell to read it, click to inspect. Ring = rank inside its family, largest first.' : 'Hover a cell to read it, click to inspect. Rows = rank inside the family.')}</div>`; }
   }
   /* zoom + pan (wheel / pinch / buttons / drag) */
   let view = { k: 1, x: 0, y: 0 }, panning = false, suppressClick = false, lastLayoutKey = '';
@@ -597,16 +601,16 @@ const tax = (() => {
   /* left panel for this view */
   function panelHTML() {
     const t = S.tx, cnt = Object.fromEntries(CAT_ORDER.map(c => [c, Object.values(CL).filter(x => x.cat === c).length]));
-    if (!NCL) return `<h2>No clusters found</h2><p class="lead">The first grouping stage did not find any dense region of similar statements in this run, so no taxonomy was built. The statements are still available in the evidence ${MKEYS.length > 1 ? 'clouds' : 'cloud'}.</p>${diagHTML()}<div class="note">Clusters need at least <b>min_cluster_size</b> near-identical descriptions. Larger video sets produce more recurrent evidence.</div>`;
+    if (!NCL) return `<h2>${L('No clusters found')}</h2><p class="lead">${L('The first grouping stage did not find any dense region of similar statements in this run, so no taxonomy was built. The statements are still available in the evidence view.')}</p>${diagHTML()}<div class="note">${L('Clusters need at least min_cluster_size near-identical descriptions. Larger video sets produce more recurrent evidence.')}</div>`;
     return `<h2>${plural(NCL, 'cluster')}, ${plural(NFAM, 'candidate family', 'candidate families')}</h2>
-      <p class="lead">The automatic taxonomy as an instrument. Each cell is a first-stage cluster on the spoke of its family; its colour is the ${esc(SHARE_TXT)}.</p>
+      <p class="lead">${L('The automatic taxonomy as an instrument. Each cell is a first-stage cluster on the spoke of its family; its colour is the {x}.', { x: esc(SHARE_TXT) })}</p>
       ${diagHTML()}
-      <div class="sec"><h4>Layout</h4><div class="seg" id="txLayout">${[['wheel', 'Radial wheel'], ['matrix', 'Matrix grid']].map(([k, l]) => `<button data-l="${k}" class="${t.layout === k ? 'on' : ''}">${l}</button>`).join('')}</div>
-        <div class="seg" id="txOrder" style="margin-top:6px">${[['id', 'Order by size'], ['anom', 'By anomaly share']].map(([k, l]) => `<button data-o="${k}" class="${t.order === k ? 'on' : ''}">${l}</button>`).join('')}</div></div>
-      <div class="sec"><h4>Anomaly category <button data-act="allcats">All</button></h4><div class="legend">${CAT_ORDER.map(c => `<button class="lg ${t.cats.has(c) ? '' : 'off'} ${t.cats.size < 5 && t.cats.has(c) ? 'on' : ''}" data-c="${c}" style="--c:${CAT[c].color}"><i class="sq"></i><span><b>${c}</b><small>${esc(CAT[c].text)} · ${CAT[c].rule}%</small></span><span class="ct">${cnt[c]}</span></button>`).join('')}</div></div>
-      ${multi ? `<div class="sec"><h4>Model</h4><div class="chips">${Object.entries(MODELS).map(([k, m]) => `<button class="chip ${t.models.has(k) ? 'on' : 'off'}" data-model="${k}">${m.sym} ${esc(m.label)}</button>`).join('')}</div></div>` : ''}
-      <div class="sec"><h4>Find <span style="font:400 calc(11px*var(--fs)) var(--sans);color:var(--quiet)">press / · Enter selects</span></h4><input class="search" id="txSearch" type="search" placeholder="Search names, statements, F01…" value="${esc(S.q)}" autocomplete="off"></div>
-      <div class="note">Families are an automatic computational grouping of cluster centroids, not a validated taxonomy. Names are the most distinctive terms of each cluster's own statements.${multi ? ' ' + MKEYS.map(m => `${MODELS[m].sym} ${esc(MODELS[m].label)}`).join(' · ') + '.' : ''}</div>`;
+      <div class="sec"><h4>${L('Layout')}</h4><div class="seg" id="txLayout">${[['wheel', 'Radial wheel'], ['matrix', 'Matrix grid']].map(([k, l]) => `<button data-l="${k}" class="${t.layout === k ? 'on' : ''}">${L(l)}</button>`).join('')}</div>
+        <div class="seg" id="txOrder" style="margin-top:6px">${[['id', 'Order by size'], ['anom', 'By anomaly share']].map(([k, l]) => `<button data-o="${k}" class="${t.order === k ? 'on' : ''}">${L(l)}</button>`).join('')}</div></div>
+      <div class="sec"><h4>${L('Anomaly category')} <button data-act="allcats">${L('All')}</button></h4><div class="legend">${CAT_ORDER.map(c => `<button class="lg ${t.cats.has(c) ? '' : 'off'} ${t.cats.size < 5 && t.cats.has(c) ? 'on' : ''}" data-c="${c}" style="--c:${CAT[c].color}"><i class="sq"></i><span><b>${CATN(c)}</b><small>${esc(L(CAT[c].text))} · ${CAT[c].rule.replace(' and ', L(' and '))}%</small></span><span class="ct">${cnt[c]}</span></button>`).join('')}</div></div>
+      ${multi ? `<div class="sec"><h4>${L('Model')}</h4><div class="chips">${Object.entries(MODELS).map(([k, m]) => `<button class="chip ${t.models.has(k) ? 'on' : 'off'}" data-model="${k}">${m.sym} ${esc(m.label)}</button>`).join('')}</div></div>` : ''}
+      <div class="sec"><h4>${L('Find')} <span style="font:400 calc(11px*var(--fs)) var(--sans);color:var(--quiet)">${L('press / · Enter selects')}</span></h4><input class="search" id="txSearch" type="search" placeholder="${L('Search names, statements, F01…')}" value="${esc(S.q)}" autocomplete="off"></div>
+      <div class="note">${L("Families are an automatic computational grouping of cluster centroids, not a validated taxonomy. Names are the most distinctive terms of each cluster's own statements.")}${multi ? ' ' + MKEYS.map(m => `${MODELS[m].sym} ${esc(MODELS[m].label)}`).join(' · ') + '.' : ''}</div>`;
   }
   function panelClick(e) {
     if (S.view !== 'taxonomy') return; const t = S.tx;
@@ -631,15 +635,15 @@ const sources = (() => {
   const el = sheet('#srcSheet'), body = $('#srcBody'); let q = '', selected = null;
   const perVideo = VID.map(() => ({ st: [], cl: new Set() }));
   for (const m of MKEYS) { const d = A.models[m]; d.src.forEach((src, i) => src.forEach(([vi, w, a]) => { perVideo[vi].st.push({ i, m, w, a }); if (d.cl[i] >= 0) perVideo[vi].cl.add(d.keys[d.cl[i]]); })); }
-  const dec = a => a === 1 ? '<span class="pred a1">ANOMALOUS</span>' : a === 0 ? '<span class="pred a0">NORMAL</span>' : '<span class="st">UNDETERMINED</span>';
+  const dec = a => a === 1 ? `<span class="pred a1">${L('ANOMALOUS')}</span>` : a === 0 ? `<span class="pred a0">${L('NORMAL')}</span>` : `<span class="st">${L('UNDETERMINED')}</span>`;
   function render() {
     const rows = VID.map((v, i) => ({ v, i })).filter(({ v }) => !q || (v.id + ' ' + v.name).toLowerCase().includes(q));
-    const detail = selected === null ? '<div class="empty">Select a video to read its evidence.</div>' : (() => { const v = VID[selected], pv = perVideo[selected];
-      return `<div class="sec" style="margin-top:0"><h4>${esc(v.name)} · ${esc(MODELS[v.model].label)}</h4>${v.error ? `<div class="diag"><b>PROCESSING ISSUE</b>${esc(v.error)}</div>` : ''}<div class="ev">${pv.st.length ? pv.st.map(s => { const d = A.models[s.m], k = d.cl[s.i] >= 0 ? d.keys[d.cl[s.i]] : null;
-        return `<blockquote>${esc(d.ev[s.i])}<cite>${v.windows > 1 ? `window ${s.w + 1} · ` : ''}<span class="pred a${s.a}">${s.a ? 'ANOM' : 'NORM'}</span> · ${k ? `<button class="vlink" data-k="${esc(k)}">${esc(famOf(CL[k].fam).code)} · ${esc(CL[k].name)}</button>` : 'noise'}</cite></blockquote>`; }).join('') : '<div class="empty">No valid evidence for this video.</div>'}</div></div>`; })();
-    body.innerHTML = `<h2>Sources</h2><p class="lead">Every video of the run with the decision returned by the VLM. ${PRED ? 'These are model predictions, not ground truth.' : 'Composition uses the reference labels supplied with the run; the VLM never saw them.'} Click a row to read its evidence and jump to its clusters.</p>
-      <div class="sheet-tools"><input class="search" id="srcSearch" type="search" placeholder="Search videos…" value="${esc(q)}" autocomplete="off"><span class="lsub" style="margin:0">${plural(rows.length, 'video')}</span></div>
-      <div class="src-grid"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Video</th>${multi ? '<th>Model</th>' : ''}<th>Status</th><th>VLM decision</th><th>Duration</th><th>Windows</th><th>Statements</th><th>Clusters</th></tr></thead><tbody>${rows.map(({ v, i }) => `<tr class="click ${i === selected ? 'on' : ''}" data-i="${i}"><td class="mono">${esc(v.name)}</td>${multi ? `<td>${MODELS[v.model].sym} ${esc(MODELS[v.model].short)}</td>` : ''}<td><span class="st ${v.status}">${v.status.toUpperCase()}</span></td><td>${dec(v.anomaly)}</td><td>${v.dur != null ? v.dur.toFixed(1) + ' s' : '—'}</td><td>${v.windows ?? '—'}</td><td>${perVideo[i].st.length}</td><td>${perVideo[i].cl.size}</td></tr>`).join('')}</tbody></table></div><div class="src-detail">${detail}</div></div>`;
+    const detail = selected === null ? `<div class="empty">${L('Select a video to read its evidence.')}</div>` : (() => { const v = VID[selected], pv = perVideo[selected];
+      return `<div class="sec" style="margin-top:0"><h4>${esc(v.name)} · ${esc(MODELS[v.model].label)}</h4>${v.error ? `<div class="diag"><b>${L('PROCESSING ISSUE')}</b>${esc(v.error)}</div>` : ''}<div class="ev">${pv.st.length ? pv.st.map(s => { const d = A.models[s.m], k = d.cl[s.i] >= 0 ? d.keys[d.cl[s.i]] : null;
+        return `<blockquote>${esc(d.ev[s.i])}<cite>${v.windows > 1 ? `${L('window {n}', { n: s.w + 1 })} · ` : ''}<span class="pred a${s.a}">${L(s.a ? 'ANOM' : 'NORM')}</span> · ${k ? `<button class="vlink" data-k="${esc(k)}">${esc(famOf(CL[k].fam).code)} · ${esc(CL[k].name)}</button>` : L('noise')}</cite></blockquote>`; }).join('') : `<div class="empty">${L('No valid evidence for this video.')}</div>`}</div></div>`; })();
+    body.innerHTML = `<h2>${L('Sources')}</h2><p class="lead">${L('Every video of the run with the decision returned by the VLM.')} ${L(PRED ? 'These are model predictions, not ground truth.' : 'Composition uses the reference labels supplied with the run; the VLM never saw them.')} ${L('Click a row to read its evidence and jump to its clusters.')}</p>
+      <div class="sheet-tools"><input class="search" id="srcSearch" type="search" placeholder="${L('Search videos…')}" value="${esc(q)}" autocomplete="off"><span class="lsub" style="margin:0">${plural(rows.length, 'video')}</span></div>
+      <div class="src-grid"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>${L('Video')}</th>${multi ? `<th>${L('Model')}</th>` : ''}<th>${L('Status')}</th><th>${L('VLM decision')}</th><th>${L('Duration')}</th><th>${L('Windows')}</th><th>${L('Statements')}</th><th>${L('Clusters')}</th></tr></thead><tbody>${rows.map(({ v, i }) => `<tr class="click ${i === selected ? 'on' : ''}" data-i="${i}"><td class="mono">${esc(v.name)}</td>${multi ? `<td>${MODELS[v.model].sym} ${esc(MODELS[v.model].short)}</td>` : ''}<td><span class="st ${v.status}">${L(v.status.toUpperCase())}</span></td><td>${dec(v.anomaly)}</td><td>${v.dur != null ? v.dur.toFixed(1) + ' s' : '—'}</td><td>${v.windows ?? '—'}</td><td>${perVideo[i].st.length}</td><td>${perVideo[i].cl.size}</td></tr>`).join('')}</tbody></table></div><div class="src-detail">${detail}</div></div>`;
   }
   body.addEventListener('input', e => { if (e.target.id === 'srcSearch') { q = e.target.value.trim().toLowerCase(); const pos = e.target.selectionStart; render(); const s = $('#srcSearch'); s.focus(); s.setSelectionRange(pos, pos); } });
   body.addEventListener('click', e => { const k = e.target.closest('.vlink'); if (k) { el.classList.remove('on'); return selectCluster(k.dataset.k, { fly: true }); }
@@ -653,14 +657,14 @@ const runReport = (() => {
   const kv = obj => `<dl class="kv">${Object.entries(obj).filter(([, v]) => v !== undefined && v !== null && v !== '').map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')}</dl>`;
   function render() {
     const vs = q.videos_by_status || {};
-    body.innerHTML = `<h2>Run report</h2><p class="lead">${esc(META.title)} · generated ${esc((META.created || '').replace('T', ' ').slice(0, 16))} UTC${META.simulated ? ' · <b>simulated demonstration data</b>' : ''}. All stages ran automatically; nothing was reviewed by a person.</p>
-      <div class="kgrid">${[[c.videos, 'videos'], [vs.complete, 'complete'], [vs.partial, 'partial'], [vs.failed, 'failed'], [c.occurrences, 'evidence occurrences'], [c.statements, 'unique statements'], [c.clusters, 'clusters'], [c.noise_statements, 'noise statements'], [c.families, 'families']].map(([n, l]) => `<div><b>${fmt(n)}</b><span>${l}</span></div>`).join('')}</div>
+    body.innerHTML = `<h2>${L('Run report')}</h2><p class="lead">${esc(META.title)} · ${L('generated {d} UTC', { d: esc((META.created || '').replace('T', ' ').slice(0, 16)) })}${META.simulated ? ` · <b>${L('simulated demonstration data')}</b>` : ''}. ${L('All stages ran automatically; nothing was reviewed by a person.')}</p>
+      <div class="kgrid">${[[c.videos, 'videos'], [vs.complete, 'complete'], [vs.partial, 'partial'], [vs.failed, 'failed'], [c.occurrences, 'evidence occurrences'], [c.statements, 'unique statements'], [c.clusters, 'clusters'], [c.noise_statements, 'noise statements'], [c.families, 'families']].map(([n, l]) => `<div><b>${fmt(n)}</b><span>${L(l)}</span></div>`).join('')}</div>
       ${diagHTML()}
-      <div class="cols2"><div class="sec"><h4>Extraction</h4>${kv({ 'VLM': b.model_name || b.model, 'Checkpoint': b.model, 'Revision': b.revision, 'Backend': b.backend, 'Precision': b.precision, 'Device': b.gpu || b.device, 'Sampling': META.sampling === '1fps' ? '1 frame per second (windows)' : META.sampling === 'uniform16' ? '16 frames, uniformly spaced' : META.sampling, 'Frame size': b.frame_size ? b.frame_size.join('×') : null, 'Valid windows': q.windows_valid, 'Invalid / failed windows': q.windows_invalid_or_failed, 'JSON parsed strictly': (q.parse_status || {}).strict, 'JSON embedded in text': (q.parse_status || {}).embedded })}</div>
-      <div class="sec"><h4>Discovery</h4>${kv({ 'Embeddings': p.embedding_model, 'HDBSCAN': p.hdbscan ? `min_cluster_size=${p.hdbscan.min_cluster_size} · min_samples=${p.hdbscan.min_samples} · ${p.hdbscan.metric}` : null, 'Deduplication': p.deduplication, 'Second stage': hs ? `${hs.method} linkage · k=${hs.k} · score ${hs.score.toFixed(3)}` : (META.hierarchy || {}).reason, 'Candidate cuts': (META.hierarchy || {}).candidates_evaluated, 'Composition': PRED ? 'VLM decisions (no reference labels)' : 'reference labels', 'Projection': p.projection ? Object.values(p.projection)[0] : null })}</div></div>
-      ${META.timings ? `<div class="sec"><h4>Timings</h4>${kv(Object.fromEntries(Object.entries(META.timings).map(([k, v]) => [k, v + ' s'])))}</div>` : ''}
-      <div class="sec"><h4>Export</h4><div class="actions" style="margin-top:0"><button class="btn pri" data-dl="statements">Statements (CSV)</button><button class="btn" data-dl="clusters">Clusters (CSV)</button><button class="btn" data-dl="json">Atlas data (JSON)</button></div></div>
-      <p class="sheet-foot">The VLM decision and evidence are model outputs, not verified annotations. Format validation checks the JSON contract, not visual correctness. Projections are qualitative.</p>`;
+      <div class="cols2"><div class="sec"><h4>${L('Extraction')}</h4>${kv({ 'VLM': b.model_name || b.model, [L('Checkpoint')]: b.model, [L('Revision')]: b.revision, [L('Backend')]: b.backend, [L('Precision')]: b.precision, [L('Device')]: b.gpu || b.device, [L('Sampling')]: META.sampling === '1fps' ? L('1 frame per second (windows)') : META.sampling === 'uniform16' ? L('16 frames, uniformly spaced') : META.sampling, [L('Frame size')]: b.frame_size ? b.frame_size.join('×') : null, [L('Valid windows')]: q.windows_valid, [L('Invalid / failed windows')]: q.windows_invalid_or_failed, [L('JSON parsed strictly')]: (q.parse_status || {}).strict, [L('JSON embedded in text')]: (q.parse_status || {}).embedded })}</div>
+      <div class="sec"><h4>${L('Discovery')}</h4>${kv({ [L('Embeddings')]: p.embedding_model, 'HDBSCAN': p.hdbscan ? `min_cluster_size=${p.hdbscan.min_cluster_size} · min_samples=${p.hdbscan.min_samples} · ${p.hdbscan.metric}` : null, [L('Deduplication')]: p.deduplication, [L('Second stage')]: hs ? `${L(hs.method + ' linkage')} · k=${hs.k} · score ${hs.score.toFixed(3)}` : (META.hierarchy || {}).reason, [L('Candidate cuts')]: (META.hierarchy || {}).candidates_evaluated, [L('Composition')]: L(PRED ? 'VLM decisions (no reference labels)' : 'reference labels'), [L('Projection')]: p.projection ? Object.values(p.projection)[0] : null })}</div></div>
+      ${META.timings ? `<div class="sec"><h4>${L('Timings')}</h4>${kv(Object.fromEntries(Object.entries(META.timings).map(([k, v]) => [k, v + ' s'])))}</div>` : ''}
+      <div class="sec"><h4>${L('Export')}</h4><div class="actions" style="margin-top:0"><button class="btn pri" data-dl="statements">${L('Statements (CSV)')}</button><button class="btn" data-dl="clusters">${L('Clusters (CSV)')}</button><button class="btn" data-dl="json">${L('Atlas data (JSON)')}</button></div></div>
+      <p class="sheet-foot">${L('The VLM decision and evidence are model outputs, not verified annotations. Format validation checks the JSON contract, not visual correctness. Projections are qualitative.')}</p>`;
   }
   body.addEventListener('click', e => { const d = e.target.closest('[data-dl]'); if (!d) return; const kind = d.dataset.dl;
     if (kind === 'statements') download('statements.csv', statementsCSV(), 'text/csv');
@@ -689,7 +693,7 @@ $('#themeBtn').addEventListener('click', () => applyTheme(LIGHT() ? 'dark' : 'li
 
 /* ------------------------------------------------------------------ navigation */
 const nav = $('#nav'), ink = $('#ink');
-const tabDefs = [['taxonomy', 'Taxonomy', 'Candidate family wheel'], ['families', plural(NFAM, 'family', 'families'), 'Cluster centroids · 3D'], ...MKEYS.map(m => [m, MODELS[m].label, 'Evidence · 3D'])];
+const tabDefs = [['taxonomy', L('Taxonomy'), L('Candidate family wheel')], ['families', plural(NFAM, 'family', 'families'), L('Cluster centroids · 3D')], ...MKEYS.map(m => [m, MODELS[m].label, L('Evidence · 3D')])];
 tabDefs.forEach(([v, l, s]) => nav.insertAdjacentHTML('beforeend', `<button class="tab" data-view="${v}"><span class="l">${esc(l)}</span><span class="s">${esc(s)}</span></button>`));
 const tabs = $$('.tab');
 $('#shapeKey').innerHTML = META.models.map(m => `<span><svg viewBox="0 0 14 14">${['<circle cx="7" cy="7" r="6"/>', '<polygon points="7,0.5 13.5,7 7,13.5 0.5,7"/>', '<rect x="1.5" y="1.5" width="11" height="11" rx="1"/>', '<polygon points="7,1 13.5,12.5 0.5,12.5"/>'][m.shape]}</svg>${esc(m.label)}</span>`).join('');
@@ -766,10 +770,12 @@ initResizer($('#panelRs'), '--pw', $('#panel'), 1, 260, 560); initResizer($('#in
 const c0 = META.counts, intro = $('#intro'); let introDone = false;
 document.title = `${META.title} · Observable Evidence Atlas`;
 document.body.classList.toggle('sim', !!META.simulated);
-$('#introText').textContent = NCL ? `${plural(c0.statements, 'evidence statement')}, ${plural(c0.clusters, 'cluster')} and ${plural(c0.families, 'candidate family', 'candidate families')} discovered automatically from ${plural(new Set(VID.map(v => v.id)).size, 'video')} described by ${META.models.map(m => m.label).join(' and ')}.`
-  : `${plural(c0.statements, 'evidence statement')} from ${plural(new Set(VID.map(v => v.id)).size, 'video')}. No recurrent cluster was found in this run.`;
-$('#introKicker').textContent = (META.simulated ? 'SIMULATED DEMONSTRATION DATA · ' : '') + `${META.title} · ${(META.created || '').slice(0, 10)}`;
-$('#helpFoot').innerHTML = `Axes of the projections are not interpretable; distances are qualitative. Clusters, families and names are produced automatically, without human review; families are a <b>candidate computational grouping</b>. Colour uses the ${esc(SHARE_TXT)}${PRED ? ' — model predictions, not ground truth' : ''}. Keys: <span class="mono">1–${VIEWS.length}</span> or <span class="mono">← →</span> switch views · <span class="mono">Esc</span> clears the selection · <span class="mono">/</span> search · drag the panel edges to resize them.`;
+const nVid = new Set(VID.map(v => v.id)).size;
+$('#introText').textContent = NCL ? L('{s}, {c} and {f} discovered automatically from {v} described by {m}.', { s: plural(c0.statements, 'evidence statement'), c: plural(c0.clusters, 'cluster'), f: plural(c0.families, 'candidate family', 'candidate families'), v: plural(nVid, 'video'), m: META.models.map(m => m.label).join(L(' and ')) })
+  : L('{s} from {v}. No recurrent cluster was found in this run.', { s: plural(c0.statements, 'evidence statement'), v: plural(nVid, 'video') });
+$('#introKicker').textContent = (META.simulated ? L('SIMULATED DEMONSTRATION DATA · ') : '') + `${META.title} · ${(META.created || '').slice(0, 10)}`;
+$('#helpFoot').innerHTML = L('help-foot', { x: esc(SHARE_TXT), p: PRED ? L(' — model predictions, not ground truth') : '', n: VIEWS.length });
+if (window.I18N) { I18N.applyStatic(); $('#langBtn').addEventListener('click', () => { I18N.setLang(I18N.lang === 'pt' ? 'en' : 'pt'); location.reload(); }); }
 function endIntro() { if (introDone) return; introDone = true; intro.classList.add('gone'); const v = cur(); if (v && S.view !== 'taxonomy') v.asm.t0 = performance.now(); if (pendingTax && S.view === 'taxonomy') { pendingTax = false; setTimeout(() => tax.show(), 250); } }
 intro.addEventListener('click', endIntro); addEventListener('keydown', () => endIntro(), { once: true }); setTimeout(endIntro, new URLSearchParams(location.search).has('nointro') ? 0 : 4800);
 
