@@ -11,7 +11,12 @@
   const clusters = A ? A.clusters : [];
   const familyMap = new Map(families.map((family,index) => [family.family_id,{...family,color:colors[index%colors.length]}]));
   const clusterMap = new Map(clusters.map(cluster => [cluster.cluster_id,cluster]));
-  const state = {layer:'families', model:'all', family:null, cluster:null, query:''};
+  // A amostra começa nos grupos para mostrar sua diversidade; novas análises
+  // começam nas famílias, que são a etapa mais resumida da taxonomia.
+  const initialLayer = A?.demo_metadata ? 'clusters' : 'families';
+  const state = {layer:initialLayer, model:'all', family:null, cluster:null, query:''};
+  document.querySelectorAll('.view-switch button').forEach(button =>
+    button.classList.toggle('active', button.dataset.layer === initialLayer));
   const pointView={yaw:.55,pitch:.28,zoom:1,drag:null,dragged:false,points:[],projected:[],bins:new Map()};
   const occurrences = rows.flatMap(row => (row.occurrences || []).map(source => ({row,source})));
   const uniqueVideos = new Set(occurrences.map(({source})=>source.video_sha256||source.video_id));
@@ -185,7 +190,7 @@
     const evidence=name==='evidence';
     if(evidence){state.layer='evidence';document.querySelectorAll('.view-switch button').forEach(button=>button.classList.toggle('active',button.dataset.layer==='evidence'));}
     else if(name==='clusters'){state.layer='clusters';document.querySelectorAll('.view-switch button').forEach(button=>button.classList.toggle('active',button.dataset.layer==='clusters'));}
-    else if(name==='overview'){state.layer='families';state.family=null;state.cluster=null;document.querySelectorAll('.view-switch button').forEach(button=>button.classList.toggle('active',button.dataset.layer==='families'));}
+    else if(name==='overview'){state.layer=initialLayer;state.family=null;state.cluster=null;document.querySelectorAll('.view-switch button').forEach(button=>button.classList.toggle('active',button.dataset.layer===initialLayer));}
     $('#evidenceBrowser').classList.toggle('is-hidden',!evidence);
     document.querySelectorAll('.axis,.plot-watermark').forEach(el=>el.classList.toggle('is-hidden',evidence));
     if(!A){$('#inspectTitle').innerHTML=evidence?'Evidências da<br>execução original.':name==='clusters'?'A descoberta ainda<br>não foi executada.':'Uma amostra<br>de observações.';$('#inspectCopy').textContent=evidence?'A amostra preserva as previsões do modelo e os identificadores dos vídeos.':name==='clusters'?'Execute a descoberta semântica para criar os grupos e as famílias candidatas.':'Esta demonstração apresenta respostas arquivadas do InternVL.';}
