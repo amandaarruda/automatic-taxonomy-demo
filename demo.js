@@ -21,7 +21,7 @@ I.add({ pt: {
   '8 = paper': '8 = artigo', 'FRAME SAMPLING': 'AMOSTRAGEM', '16 frames · uniform': '16 frames · uniformes', '1 frame per second': '1 frame por segundo',
   'Vision-language model': 'Modelo de visão e linguagem', 'InternVL3.5 · local GPU': 'InternVL3.5 · GPU local', 'SIMULATED · CACHED': 'SIMULADO · EM CACHE', 'RESPONSE': 'RESPOSTA',
   'Explore the atlas': 'Explorar o atlas', 'Choose other videos': 'Escolher outros vídeos', 'LIVE · PYTHON IN YOUR BROWSER': 'AO VIVO · PYTHON NO SEU NAVEGADOR',
-  'All': 'Todos', 'Routine operations': 'Operações de rotina', 'Incidents': 'Incidentes', 'Every third video': 'Um a cada três', 'Two per scene': 'Dois por cena', 'Clear': 'Limpar',
+  'All': 'Todos', 'Branches & ATMs': 'Agências e ATMs', 'Offices & outdoors': 'Escritórios e áreas externas', 'Incidents': 'Incidentes', 'Every third video': 'Um a cada três', 'Two per scene': 'Dois por cena', 'Clear': 'Limpar',
   'Run discovery on {n} videos': 'Rodar a descoberta em {n} vídeos', 'Select at least one video': 'Selecione ao menos um vídeo', 'Previous step (←)': 'Passo anterior (←)', 'Pause (space)': 'Pausar (espaço)', 'Play (space)': 'Continuar (espaço)', 'Next step (→)': 'Próximo passo (→)', 'Show or hide the log': 'Mostrar ou ocultar o registro', '{n} of {t} selected': '{n} de {t} selecionados', 'cached': 'em cache',
   'Downloading the Python runtime (Pyodide)…': 'Baixando o Python do navegador (Pyodide)…', 'Loading numpy, scipy and scikit-learn…': 'Carregando numpy, scipy e scikit-learn…',
   'Loading the product code…': 'Carregando o código do produto…', 'Python ready · Pyodide {v}': 'Python pronto · Pyodide {v}',
@@ -44,7 +44,7 @@ I.add({ pt: {
   'cap-families': 'Cada grupo vira um centroide normalizado. O agrupamento aglomerativo (cosseno, ligações média e completa) é cortado pelo critério composto do artigo — silhueta, estabilidade bootstrap, concordância entre ligações e coesão.{s}',
   'cap-name': 'Cada nome reúne os termos mais característicos das frases do próprio grupo; nada é inventado. A cor indica quantos vídeos de suporte o modelo marcou como anômalos. Tudo continua ligado às frases e aos vídeos de origem.',
   ' Selected here: {m} linkage, k = {k}.': ' Escolhido aqui: ligação {m}, k = {k}.', 'complete': 'completa', 'average': 'média',
-  'videos selected': 'vídeos selecionados', 'synthetic · 21 scene types': 'sintéticos · 21 tipos de cena', 'evidence statements': 'frases de evidência', 'from {n} validated responses': 'de {n} respostas validadas',
+  'videos selected': 'vídeos selecionados', 'synthetic · 21 scene types': 'sintéticos · 22 tipos de cena', 'evidence statements': 'frases de evidência', 'from {n} validated responses': 'de {n} respostas validadas',
   'unique statements': 'frases únicas', '{n} occurrences · 384-d BGE vectors': '{n} ocorrências · vetores BGE de 384 dimensões', 'clusters': 'grupos', '{n} statements left as noise': '{n} frases sem grupo',
   'candidate families': 'famílias candidatas', '{m} linkage · k = {k} · {n} cuts scored': 'ligação {m} · k = {k} · {n} cortes avaliados', 'second stage not estimated': 'segunda etapa não estimada',
   'RESULT · COMPUTED IN YOUR BROWSER': 'RESULTADO · CALCULADO NO SEU NAVEGADOR', 'RESULT · PRECOMPUTED': 'RESULTADO · PRÉ-CALCULADO',
@@ -72,9 +72,9 @@ const SCENE_NAMES = { lobby: ['Branch lobby', 'Saguão da agência'], teller: ['
   plaza: ['Outdoor plaza', 'Área externa'], parking: ['Parking lot', 'Estacionamento'], armored: ['Armored truck', 'Carro-forte'],
   night: ['Night exterior', 'Exterior à noite'], fire: ['Fire & smoke', 'Fogo e fumaça'], fall: ['Falls', 'Quedas'], altercation: ['Pushing', 'Empurrões'],
   crowd: ['Crowd running', 'Multidão correndo'], unattended: ['Unattended bag', 'Bolsa abandonada'], atmdamage: ['ATM tampering', 'Dano ao ATM'],
-  collision: ['Collision', 'Colisão'] };
+  collision: ['Collision', 'Colisão'], tailgating: ['Door tailgating', 'Entrada colada'] };
 const sceneName = s => (SCENE_NAMES[s] || [s, s])[I.lang === 'pt' ? 1 : 0];
-const PRESET_NAMES = { all: 'All', everyday: 'Routine operations', incidents: 'Incidents', third: 'Every third video', small: 'Two per scene' };
+const PRESET_NAMES = { all: 'All', branch: 'Branches & ATMs', site: 'Offices & outdoors', incidents: 'Incidents', third: 'Every third video', small: 'Two per scene' };
 
 /* ------------------------------------------------------------------ corpus, selection, cache */
 let CORPUS = null, PRESETS = {}, selected = new Set(), RESULT = window.ATLAS, resultSource = 'precomputed';

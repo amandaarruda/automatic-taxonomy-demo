@@ -102,7 +102,9 @@ Object.assign(SCENES, {
   atmdamage(ctx, t, w, h, s) { W(ctx, w, h, '#12151a'); ctx.fillStyle = C.wall; ctx.fillRect(w * .1, 0, w * .8, h * .75); atmBox(ctx, w * .42, h * .25, w * .16, h * .4, .3);
     const k = Math.sin(t * 7); person(ctx, w * .36, h * .62, h * .026, -.5 + k * .4); if (k > .6) { ctx.strokeStyle = 'rgba(255,220,150,.8)'; for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.moveTo(w * .42, h * .42); ctx.lineTo(w * .42 - 6 - i * 3, h * .42 - 8 + i * 4); ctx.stroke(); } } },
 });
-Object.assign(SCENES, { queue: SCENES.counter, plaza: SCENES.sidewalk, altercation: SCENES.struggle, unattended: SCENES.object });
+Object.assign(SCENES, { tailgating(ctx, t, w, h, s) { W(ctx, w, h, '#161a20'); ctx.fillStyle = C.wall; ctx.fillRect(w * .38, 0, w * .24, h * .7); ctx.fillStyle = 'rgba(160,200,240,.2)'; ctx.fillRect(w * .42, h * .08, w * .16, h * .6); ctx.fillStyle = '#4b5361'; ctx.fillRect(w * .66, h * .3, w * .04, h * .1); ctx.fillStyle = C.accent; ctx.fillRect(w * .675, h * .33, 5, 4);
+    const k = (t % 8) / 8, y = h * (.9 - .55 * k); person(ctx, w * .5, y, h * .026, -Math.PI / 2); person(ctx, w * .5 + (k > .3 ? 4 : 18), y + h * .06, h * .026, -Math.PI / 2); },
+  queue: SCENES.counter, plaza: SCENES.sidewalk, altercation: SCENES.struggle, unattended: SCENES.object });
 SCENES.default = SCENES.sidewalk;
 
 function drawScene(ctx, scene, t, w, h, seed = 3) {
